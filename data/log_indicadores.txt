@@ -1,0 +1,37 @@
+
+=======================================================
+  CALCULANDO INDICADORES TÉCNICOS
+=======================================================
+
+  [^GSPC] Calculando indicadores...
+  ✓ RSI: 42.63 | MACD: BAJISTA | Señal: NEUTRAL
+
+  [^IXIC] Calculando indicadores...
+  ✓ RSI: 42.99 | MACD: BAJISTA | Señal: NEUTRAL
+
+  [^DJI] Calculando indicadores...
+  ✓ RSI: 43.76 | MACD: BAJISTA | Señal: NEUTRAL
+
+  [GC=F] Calculando indicadores...
+
+  [CL=F] Calculando indicadores...
+
+  [SI=F] Calculando indicadores...
+
+  [HG=F] Calculando indicadores...
+
+  [LIT] Calculando indicadores...
+
+  [ALB] Calculando indicadores...
+
+  [SQM] Calculando indicadores...
+
+  [BTC-USD] Calculando indicadores...
+
+  ✓ Hoja 'Resumen Señales' generada
+
+=======================================================
+  EXCEL GENERADO: /Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/data/INDICADORES_INDICES.xlsx
+=======================================================
+
+INDICADORES_OK

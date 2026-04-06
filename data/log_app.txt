@@ -1,0 +1,653 @@
+
+  You can now view your Streamlit app in your browser.
+
+  Local URL: http://localhost:8501
+  Network URL: http://192.168.100.93:8501
+  External URL: http://186.10.175.232:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2026-04-01 15:28:30.344 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+2026-04-01 15:28:30.482 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:28:30.494 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:28:30.502 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:28:30.503 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:41:55.041 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py:535: FutureWarning: Styler.applymap has been deprecated. Use Styler.map instead.
+  st.dataframe(df_tab.style.applymap(color_val,subset=["Valor"]),
+2026-04-01 15:41:55.177 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:42:03.529 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py:535: FutureWarning: Styler.applymap has been deprecated. Use Styler.map instead.
+  st.dataframe(df_tab.style.applymap(color_val,subset=["Valor"]),
+2026-04-01 15:42:03.599 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:42:05.678 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py:535: FutureWarning: Styler.applymap has been deprecated. Use Styler.map instead.
+  st.dataframe(df_tab.style.applymap(color_val,subset=["Valor"]),
+2026-04-01 15:42:05.745 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:46:23.265 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py:535: FutureWarning: Styler.applymap has been deprecated. Use Styler.map instead.
+  st.dataframe(df_tab.style.applymap(color_val,subset=["Valor"]),
+2026-04-01 15:46:23.407 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:46:26.205 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py:535: FutureWarning: Styler.applymap has been deprecated. Use Styler.map instead.
+  st.dataframe(df_tab.style.applymap(color_val,subset=["Valor"]),
+2026-04-01 15:46:26.347 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:46:27.053 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py:535: FutureWarning: Styler.applymap has been deprecated. Use Styler.map instead.
+  st.dataframe(df_tab.style.applymap(color_val,subset=["Valor"]),
+2026-04-01 15:46:27.195 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:50:17.609 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+2026-04-01 15:50:29.514 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py:535: FutureWarning: Styler.applymap has been deprecated. Use Styler.map instead.
+  st.dataframe(df_tab.style.applymap(color_val,subset=["Valor"]),
+2026-04-01 15:50:29.581 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:50:32.004 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py:535: FutureWarning: Styler.applymap has been deprecated. Use Styler.map instead.
+  st.dataframe(df_tab.style.applymap(color_val,subset=["Valor"]),
+2026-04-01 15:50:32.061 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:50:37.902 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py:535: FutureWarning: Styler.applymap has been deprecated. Use Styler.map instead.
+  st.dataframe(df_tab.style.applymap(color_val,subset=["Valor"]),
+2026-04-01 15:50:37.970 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:50:39.004 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py:535: FutureWarning: Styler.applymap has been deprecated. Use Styler.map instead.
+  st.dataframe(df_tab.style.applymap(color_val,subset=["Valor"]),
+2026-04-01 15:50:39.070 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:50:40.614 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py:535: FutureWarning: Styler.applymap has been deprecated. Use Styler.map instead.
+  st.dataframe(df_tab.style.applymap(color_val,subset=["Valor"]),
+2026-04-01 15:50:40.676 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:50:42.676 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py:535: FutureWarning: Styler.applymap has been deprecated. Use Styler.map instead.
+  st.dataframe(df_tab.style.applymap(color_val,subset=["Valor"]),
+2026-04-01 15:50:42.724 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:50:45.663 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+2026-04-01 15:50:47.815 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 355, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py:535: FutureWarning: Styler.applymap has been deprecated. Use Styler.map instead.
+  st.dataframe(df_tab.style.applymap(color_val,subset=["Valor"]),
+2026-04-01 15:50:47.858 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:51:23.871 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 443, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+2026-04-01 15:51:23.965 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:51:24.022 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:51:24.075 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:52:37.423 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 483, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+2026-04-01 15:52:41.970 `label` got an empty value. This is discouraged for accessibility reasons and may be disallowed in the future by raising an exception. Please provide a non-empty label and hide it with label_visibility if needed.
+Stack (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 930, in _bootstrap
+    self._bootstrap_inner()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 973, in _bootstrap_inner
+    self.run()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/threading.py", line 910, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 378, in _run_script_thread
+    self._run_script(request.rerun_data)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 685, in _run_script
+    ) = exec_func_with_error_handling(code_to_exec, ctx)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/dashboard/app.py", line 483, in <module>
+    pagina = st.radio("", [
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/runtime/metrics_util.py", line 443, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 316, in radio
+    return self._radio(
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/widgets/radio.py", line 361, in _radio
+    maybe_raise_label_warnings(label, label_visibility)
+  File "/Users/macbookpro/Desktop/CLAUDE ARCHIVOS/APP trading/venv/lib/python3.9/site-packages/streamlit/elements/lib/policies.py", line 184, in maybe_raise_label_warnings
+    _LOGGER.warning(
+2026-04-01 15:52:42.011 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:52:42.021 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:52:42.031 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+2026-04-01 15:52:42.032 Please replace `use_container_width` with `width`.
+
+`use_container_width` will be removed after 2025-12-31.
+
+For `use_container_width=True`, use `width='stretch'`. For `use_container_width=False`, use `width='content'`.
+  Stopping...

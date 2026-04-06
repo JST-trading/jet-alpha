@@ -1,0 +1,32 @@
+# Datos históricos — se descargan en el servidor automáticamente
+data/raw/
+data/indices/
+data/commodities/
+data/financials_annual/
+data/financials/
+data/currencies/
+data/rates/
+data/noticias/
+data/social/
+data/*.xlsx
+data/*.csv
+data/descarga_log.txt
+
+# Logs y temporales
+logs/
+*.log
+__pycache__/
+*.pyc
+.DS_Store
+*.egg-info/
+dist/
+build/
+.env
+venv/
+.venv/
+*.tmp
+
+# Archivos de sistema
+.streamlit/secrets.toml
+start_app.sh
+LANZAR_SERVICIO.sh
