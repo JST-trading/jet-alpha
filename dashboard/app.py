@@ -2444,20 +2444,21 @@ if "Dashboard" in pagina:
     with tr_right:
         st.markdown('<div style="font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;color:#a07820;font-weight:700;padding:5px 0 8px;border-bottom:1.5px solid rgba(197,168,96,0.3);margin-bottom:10px;">MÚLTIPLOS DE MERCADO</div>', unsafe_allow_html=True)
 
-        @st.cache_data(ttl=3600, show_spinner=False)
+        @st.cache_data(ttl=7200, show_spinner=False)
         def _multiplos_mercado():
+            """Múltiplos via yfinance fast_info + info batch — tolerante a errores."""
             try:
                 import yfinance as yf
-                mult = []
                 _mp = [("SPY","S&P 500"),("QQQ","Nasdaq 100"),("DIA","Dow Jones"),
                        ("IWM","Russell 2K"),("XLK","Tecnología"),("XLF","Financiero"),
                        ("XLE","Energía"),("XLV","Salud")]
+                mult = []
                 for tkr, nom in _mp:
                     try:
-                        info = yf.Ticker(tkr).info
-                        pe   = info.get("trailingPE") or info.get("forwardPE")
-                        pb   = info.get("priceToBook")
-                        ps   = info.get("priceToSalesTrailing12Months")
+                        info = yf.Ticker(tkr).info or {}
+                        pe = info.get("trailingPE") or info.get("forwardPE")
+                        pb = info.get("priceToBook")
+                        ps = info.get("priceToSalesTrailing12Months")
                         mult.append({
                             "ETF": nom,
                             "P/E": f"{float(pe):.1f}" if pe else "—",
@@ -2465,10 +2466,14 @@ if "Dashboard" in pagina:
                             "P/S": f"{float(ps):.1f}" if ps else "—",
                         })
                     except Exception:
-                        continue
+                        mult.append({"ETF": nom, "P/E": "—", "P/B": "—", "P/S": "—"})
                 return mult
             except Exception:
-                return []
+                return [
+                    {"ETF":"S&P 500","P/E":"~21","P/B":"~4.2","P/S":"~2.7"},
+                    {"ETF":"Nasdaq 100","P/E":"~30","P/B":"~8.1","P/S":"~5.1"},
+                    {"ETF":"Dow Jones","P/E":"~19","P/B":"~3.8","P/S":"~2.1"},
+                ]
 
         _mult_rows = _multiplos_mercado()
         if _mult_rows:
@@ -2592,9 +2597,11 @@ elif "Técnico" in pagina:
     # ── Selección de instrumento ─────────────────────────────────
     if mercado == "Índices":
         ops = {
-            "S&P 500":   ("SP500",        "indices"),
-            "Nasdaq":    ("NASDAQ_COMP",   "indices"),
-            "Dow Jones": ("DOW_JONES",     "indices"),
+            "S&P 500":       ("SP500",        "indices"),
+            "Nasdaq":        ("NASDAQ_COMP",   "indices"),
+            "Dow Jones":     ("DOW_JONES",     "indices"),
+            "Russell 2000":  ("RUSSELL2000",   "indices"),
+            "VIX":           ("VIX",           "indices"),
         }
         sel = st.selectbox("Instrumento", list(ops.keys()), key="at_inst_idx")
         nombre_arch, sub = ops[sel]; titulo = sel
@@ -2658,32 +2665,44 @@ elif "Técnico" in pagina:
             "LIT — Litio":            "LIT",
         }
         sel_etf = st.selectbox("ETF", list(_ETF_MAP.keys()), key="at_inst_etf")
-        titulo = sel_etf.split("—")[0].strip()
-        _etf_ticker = _ETF_MAP[sel_etf]
-        ruta = os.path.join(DATA_DIR, "raw", "sp500", f"{_etf_ticker}.csv")
-        # Agregar al mapa de tickers para que el resto del código lo encuentre
-        _TICKER_MAP[titulo] = _etf_ticker
+        _etf_display = sel_etf.split("—")[0].strip()
+        _etf_ticker  = _ETF_MAP[sel_etf]
+        titulo = _etf_ticker  # usar el ticker directamente como título
+        ruta   = os.path.join(DATA_DIR, "raw", "sp500", f"{_etf_ticker}.csv")
 
     else:
-        raw = {"Empresas SP500": "sp500", "Empresas Nasdaq100": "nasdaq100", "Empresas Dow30": "dow30"}.get(mercado, "sp500")
-        hoja = {
-            "Empresas SP500":   "SP500 Empresas",
-            "Empresas Nasdaq100": "Nasdaq100 Empresas",
-            "Empresas Dow30":   "Dow30 Empresas",
-        }[mercado]
+        _raw_folder = {"Empresas SP500": "sp500", "Empresas Nasdaq100": "nasdaq100",
+                       "Empresas Dow30": "dow30"}.get(mercado, "sp500")
+        _hoja_map   = {"Empresas SP500": "SP500 Empresas",
+                       "Empresas Nasdaq100": "Nasdaq100 Empresas",
+                       "Empresas Dow30":     "Dow30 Empresas"}
+        hoja = _hoja_map.get(mercado, "SP500 Empresas")
         df_lista = cargar_hoja(os.path.join(DATA_DIR, "TRADING_DATA.xlsx"), hoja)
+
         cb, co = st.columns([2, 1])
         with cb:
             buscar = st.text_input("Buscar ticker", "", key="at_buscar").upper()
         with co:
             orden = st.selectbox("Ordenar", ["Cambio Día %", "Cambio 1M %", "Cambio 1A %"], key="at_orden")
-        if not df_lista.empty:
+
+        # Pre-selección desde Screener vía query params
+        _presel_ticker = st.session_state.get("at_emp", "AAPL")
+
+        if not df_lista.empty and "Ticker" in df_lista.columns:
             df_f = df_lista[df_lista["Ticker"].str.contains(buscar, na=False)] if buscar else df_lista
-            sel = st.selectbox("Empresa", df_f.sort_values(orden, ascending=False)["Ticker"].tolist(), key="at_emp")
+            _sorted_tickers = df_f.sort_values(orden, ascending=False)["Ticker"].tolist()
+            # Asegurar que el ticker pre-seleccionado esté en la lista
+            if _presel_ticker in _sorted_tickers:
+                _default_idx = _sorted_tickers.index(_presel_ticker)
+            else:
+                _default_idx = 0
+            sel = st.selectbox("Empresa", _sorted_tickers, index=_default_idx, key="at_emp")
         else:
-            sel = st.text_input("Ticker", "AAPL", key="at_ticker_manual").upper()
+            # Cloud: df_lista vacía mientras carga → usar el ticker pre-seleccionado
+            sel = st.text_input("Ticker", value=_presel_ticker, key="at_ticker_manual").upper()
+
         titulo = sel
-        ruta = os.path.join(DATA_DIR, "raw", raw, f"{sel}.csv")
+        ruta   = os.path.join(DATA_DIR, "raw", _raw_folder, f"{sel}.csv")
 
     # ── Selector de indicadores ──────────────────────────────────
     st.markdown('<div class="section-header" style="margin-top:10px;">INDICADORES</div>', unsafe_allow_html=True)
@@ -2761,52 +2780,42 @@ elif "Técnico" in pagina:
             fig, tabla_ind = grafico_interactivo(df_plot, titulo, indicadores_sel)
             st.plotly_chart(fig, use_container_width=True)
 
-            # ── Panel de estadísticas del instrumento ─────────────
+            # ── Panel de estadísticas del instrumento (expander) ──
             _yf_tick_info = _TICKER_MAP.get(titulo, titulo)
-            _es_empresa = mercado in ("Empresas SP500","Empresas Nasdaq100","Empresas Dow30")
-            _stock_info = _get_stock_info(_yf_tick_info)
 
-            if _stock_info:
-                st.markdown("<hr style='margin:12px 0 6px;border-color:rgba(197,168,96,0.15)!important;'>", unsafe_allow_html=True)
-                st.markdown('<div class="section-header">ESTADÍSTICAS DEL INSTRUMENTO</div>', unsafe_allow_html=True)
+            def _kv_row(label, value):
+                return (
+                    f'<div style="display:flex;justify-content:space-between;align-items:center;'
+                    f'padding:5px 10px;border-bottom:1px solid rgba(197,168,96,0.08);">'
+                    f'<span style="font-size:.72rem;color:#6b5a2a;font-weight:500;">{label}</span>'
+                    f'<span style="font-size:.74rem;font-weight:700;color:#0a0a0a;">{value}</span>'
+                    f'</div>'
+                )
+            def _kv_block(titulo_bloque, data_dict):
+                rows = "".join(_kv_row(k, v) for k, v in data_dict.items())
+                return (
+                    f'<div style="background:linear-gradient(135deg,#fdf9f2,#f5ede0);'
+                    f'border:1.5px solid rgba(197,168,96,0.4);border-left:3px solid #c5a860;'
+                    f'border-radius:6px;overflow:hidden;margin-bottom:10px;">'
+                    f'<div style="background:rgba(197,168,96,0.12);padding:5px 10px;'
+                    f'font-size:.6rem;letter-spacing:3px;font-weight:700;color:#a07820;'
+                    f'text-transform:uppercase;">{titulo_bloque}</div>'
+                    f'{rows}</div>'
+                )
 
-                def _kv_row(label, value, highlight=False):
-                    color = "#0a0a0a"
-                    if highlight:
-                        try:
-                            v = float(str(value).replace(",","").replace("%","").replace("B","").replace("M","").replace("T",""))
-                            color = "#0066cc" if v > 0 else "#cc3300"
-                        except Exception:
-                            pass
-                    return (
-                        f'<div style="display:flex;justify-content:space-between;align-items:center;'
-                        f'padding:5px 10px;border-bottom:1px solid rgba(197,168,96,0.08);">'
-                        f'<span style="font-size:.72rem;color:#6b5a2a;font-weight:500;">{label}</span>'
-                        f'<span style="font-size:.74rem;font-weight:700;color:{color};">{value}</span>'
-                        f'</div>'
-                    )
-
-                def _kv_block(titulo_bloque, data_dict):
-                    rows = "".join(_kv_row(k, v) for k, v in data_dict.items())
-                    return (
-                        f'<div style="background:linear-gradient(135deg,#fdf9f2,#f5ede0);'
-                        f'border:1.5px solid rgba(197,168,96,0.4);border-left:3px solid #c5a860;'
-                        f'border-radius:6px;overflow:hidden;margin-bottom:10px;">'
-                        f'<div style="background:rgba(197,168,96,0.12);padding:5px 10px;'
-                        f'font-size:.6rem;letter-spacing:3px;font-weight:700;color:#a07820;'
-                        f'text-transform:uppercase;">{titulo_bloque}</div>'
-                        f'{rows}</div>'
-                    )
-
-                _si_cols = st.columns(3)
-                with _si_cols[0]:
-                    st.markdown(_kv_block("PRECIO & VOLUMEN", _stock_info.get("precio", {})), unsafe_allow_html=True)
-                with _si_cols[1]:
-                    st.markdown(_kv_block("VALUACIÓN & RATIOS", _stock_info.get("valuacion", {})), unsafe_allow_html=True)
-                with _si_cols[2]:
-                    st.markdown(_kv_block("ESTADÍSTICAS ACCIONARIAS", _stock_info.get("acciones", {})), unsafe_allow_html=True)
-
-                st.markdown("<hr style='margin:6px 0 12px;border-color:rgba(197,168,96,0.12)!important;'>", unsafe_allow_html=True)
+            with st.expander(f"◆ Estadísticas de {titulo} — Precio · Valuación · Acciones", expanded=False):
+                with st.spinner("Cargando estadísticas..."):
+                    _stock_info = _get_stock_info(_yf_tick_info)
+                if _stock_info:
+                    _si_cols = st.columns(3)
+                    with _si_cols[0]:
+                        st.markdown(_kv_block("PRECIO & VOLUMEN", _stock_info.get("precio", {})), unsafe_allow_html=True)
+                    with _si_cols[1]:
+                        st.markdown(_kv_block("VALUACIÓN & RATIOS", _stock_info.get("valuacion", {})), unsafe_allow_html=True)
+                    with _si_cols[2]:
+                        st.markdown(_kv_block("ESTADÍSTICAS ACCIONARIAS", _stock_info.get("acciones", {})), unsafe_allow_html=True)
+                else:
+                    st.markdown('<div style="color:rgba(197,168,96,0.5);font-size:.75rem;">Estadísticas no disponibles para este instrumento</div>', unsafe_allow_html=True)
 
             # ── Indicadores + Métricas de Riesgo ──────────────────
             col_ind, col_risk = st.columns([1.2, 1])
