@@ -14,19 +14,8 @@ from plotly.subplots import make_subplots
 import os
 from datetime import datetime
 
-# ── Auto-setup en Streamlit Community Cloud ────────────────────
+# ── Base paths ─────────────────────────────────────────────────
 _BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_SP500_CSV  = os.path.join(_BASE, "data", "indices", "SP500.csv")
-_XLSX_PATH  = os.path.join(_BASE, "data", "TRADING_DATA.xlsx")
-_NEED_SETUP = not os.path.exists(_SP500_CSV) or not os.path.exists(_XLSX_PATH)
-if _NEED_SETUP:
-    try:
-        import sys, importlib
-        sys.path.insert(0, _BASE)
-        import setup_cloud
-        importlib.reload(setup_cloud)
-    except Exception:
-        pass
 
 try:
     import pytz
@@ -608,9 +597,10 @@ def cargar_csv(ruta, skiprows=None):
 
 @st.cache_data(ttl=1800, show_spinner=False)
 def _generar_trading_data():
-    """Genera el Excel de macros en memoria usando yfinance."""
+    """Genera datos de mercado en memoria usando yfinance con descarga batch."""
     import yfinance as yf
-    MACRO = [
+
+    MACRO_ITEMS = [
         ("^GSPC","S&P 500","ÍNDICES"),("^IXIC","Nasdaq","ÍNDICES"),
         ("^DJI","Dow Jones","ÍNDICES"),("^RUT","Russell 2000","ÍNDICES"),
         ("^VIX","VIX","ÍNDICES"),
@@ -634,75 +624,106 @@ def _generar_trading_data():
              "AMD","ADBE","QCOM","PEP","CSCO","INTC","INTU","CMCSA","TMUS","AMGN",
              "ISRG","AMAT","MU","LRCX","PANW","ADI","MELI","REGN","VRTX","CDNS"]
 
-    def get_row(tkr, nom, cat):
-        try:
-            df = yf.download(tkr, period="1y", auto_adjust=False,
-                             progress=False, threads=False)
-            if df.empty: return None
-            if isinstance(df.columns, pd.MultiIndex):
-                df.columns = df.columns.get_level_values(0)
-            close = df["Close"].dropna()
-            if len(close) < 2: return None
-            p   = float(close.iloc[-1])
-            p1  = float(close.iloc[-2])
-            p1m = float(close.iloc[-22])  if len(close)>=22  else float(close.iloc[0])
-            p1a = float(close.iloc[-252]) if len(close)>=252 else float(close.iloc[0])
-            return {
-                "Activo": nom, "Ticker": tkr, "Categoría": cat,
-                "Último Valor":  round(p, 4),
-                "Cambio Día %":  round((p/p1-1)*100, 2),
-                "Cambio 1M %":   round((p/p1m-1)*100, 2),
-                "Cambio 1A %":   round((p/p1a-1)*100, 2),
-            }
-        except Exception:
+    def _close_stats(close_series):
+        """Dado un pd.Series de closes, devuelve (p, p1, p1m, p1a) o None."""
+        s = close_series.dropna()
+        if len(s) < 2:
             return None
+        p   = float(s.iloc[-1])
+        p1  = float(s.iloc[-2])
+        p1m = float(s.iloc[-22])  if len(s) >= 22  else float(s.iloc[0])
+        p1a = float(s.iloc[-252]) if len(s) >= 252 else float(s.iloc[0])
+        return p, p1, p1m, p1a
 
-    def emp_rows(tickers, folder):
-        rows = []
-        for t in tickers:
-            ruta = os.path.join(DATA_DIR, "raw", folder, f"{t}.csv")
-            df   = cargar_csv(ruta, skiprows=[1,2])
-            if df.empty or "Close" not in df.columns or len(df)<2: continue
-            close = df["Close"].dropna()
-            p   = float(close.iloc[-1])
-            p1  = float(close.iloc[-2])
-            p1m = float(close.iloc[-22])  if len(close)>=22  else float(close.iloc[0])
-            p1a = float(close.iloc[-252]) if len(close)>=252 else float(close.iloc[0])
-            rows.append({
-                "Ticker": t, "Precio": round(p, 2),
+    # ── Descarga MACRO en un solo batch ─────────────────────────
+    macro_tickers = [t for t, _, _ in MACRO_ITEMS]
+    try:
+        raw_macro = yf.download(macro_tickers, period="1y", auto_adjust=False,
+                                progress=False, group_by="ticker")
+    except Exception:
+        raw_macro = pd.DataFrame()
+
+    macro_rows = []
+    for tkr, nom, cat in MACRO_ITEMS:
+        try:
+            if isinstance(raw_macro.columns, pd.MultiIndex):
+                df_t = raw_macro[tkr] if tkr in raw_macro.columns.get_level_values(0) else pd.DataFrame()
+            else:
+                df_t = raw_macro
+            if df_t.empty:
+                continue
+            stats = _close_stats(df_t["Close"])
+            if stats is None:
+                continue
+            p, p1, p1m, p1a = stats
+            macro_rows.append({
+                "Activo": nom, "Ticker": tkr, "Categoría": cat,
+                "Último Valor": round(p, 4),
                 "Cambio Día %": round((p/p1-1)*100, 2),
                 "Cambio 1M %":  round((p/p1m-1)*100, 2),
                 "Cambio 1A %":  round((p/p1a-1)*100, 2),
             })
+        except Exception:
+            continue
+
+    df_macro = pd.DataFrame(macro_rows) if macro_rows else pd.DataFrame(
+        columns=["Activo","Ticker","Categoría","Último Valor","Cambio Día %","Cambio 1M %","Cambio 1A %"])
+
+    # ── Descarga empresas en batch ────────────────────────────────
+    def emp_batch(tickers):
+        try:
+            raw = yf.download(tickers, period="1y", auto_adjust=False,
+                              progress=False, group_by="ticker")
+        except Exception:
+            return pd.DataFrame(columns=["Ticker","Precio","Cambio Día %","Cambio 1M %","Cambio 1A %"])
+        rows = []
+        for t in tickers:
+            try:
+                if isinstance(raw.columns, pd.MultiIndex):
+                    df_t = raw[t] if t in raw.columns.get_level_values(0) else pd.DataFrame()
+                else:
+                    df_t = raw
+                if df_t.empty or "Close" not in df_t.columns:
+                    continue
+                stats = _close_stats(df_t["Close"])
+                if stats is None:
+                    continue
+                p, p1, p1m, p1a = stats
+                rows.append({
+                    "Ticker": t, "Precio": round(p, 2),
+                    "Cambio Día %": round((p/p1-1)*100, 2),
+                    "Cambio 1M %":  round((p/p1m-1)*100, 2),
+                    "Cambio 1A %":  round((p/p1a-1)*100, 2),
+                })
+            except Exception:
+                continue
         return pd.DataFrame(rows) if rows else pd.DataFrame(
             columns=["Ticker","Precio","Cambio Día %","Cambio 1M %","Cambio 1A %"])
 
-    macro_rows = [r for t,n,c in MACRO for r in [get_row(t,n,c)] if r]
-    df_macro = pd.DataFrame(macro_rows) if macro_rows else pd.DataFrame()
-    df_sp    = emp_rows(SP500, "sp500")
-    df_dow   = emp_rows(DOW30, "dow30")
-    df_nq    = emp_rows(NQ100, "nasdaq100")
-    return {"Resumen Macro": df_macro,
-            "SP500 Empresas": df_sp,
-            "Dow30 Empresas": df_dow,
-            "Nasdaq100 Empresas": df_nq}
+    df_sp  = emp_batch(SP500)
+    df_dow = emp_batch(DOW30)
+    df_nq  = emp_batch(NQ100)
+
+    return {"Resumen Macro":       df_macro,
+            "SP500 Empresas":      df_sp,
+            "Dow30 Empresas":      df_dow,
+            "Nasdaq100 Empresas":  df_nq}
 
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=1800, show_spinner=False)
 def cargar_hoja(ruta, hoja):
     # Intentar desde Excel local — verificar que tenga columnas correctas
     if os.path.exists(ruta):
         try:
             df = pd.read_excel(ruta, sheet_name=hoja)
             if not df.empty:
-                # Verificar que Resumen Macro tenga "Último Valor" (no "Precio")
                 if hoja == "Resumen Macro" and "Último Valor" not in df.columns:
-                    pass  # Excel viejo, usar fallback
+                    pass  # Excel viejo, usar fallback yfinance
                 else:
                     return df
         except Exception:
             pass
-    # Fallback siempre activo en la nube
+    # Siempre usar yfinance en la nube (filesystem efímero)
     datos = _generar_trading_data()
     return datos.get(hoja, pd.DataFrame())
 
