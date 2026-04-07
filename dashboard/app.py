@@ -597,21 +597,38 @@ def cargar_csv(ruta, skiprows=None):
 
 @st.cache_data(ttl=1800, show_spinner="Actualizando datos de mercado...")
 def _generar_trading_data():
-    """Genera datos de mercado en memoria usando yfinance."""
+    """Genera datos de mercado en memoria usando yfinance (batch por grupos)."""
     import yfinance as yf
 
     MACRO_ITEMS = [
+        # Índices EE.UU.
         ("^GSPC","S&P 500","ÍNDICES"),("^IXIC","Nasdaq","ÍNDICES"),
         ("^DJI","Dow Jones","ÍNDICES"),("^RUT","Russell 2000","ÍNDICES"),
         ("^VIX","VIX","ÍNDICES"),
+        # Índices globales
+        ("^GDAXI","DAX","ÍNDICES"),("^IBEX","IBEX 35","ÍNDICES"),
+        ("^N225","Nikkei 225","ÍNDICES"),("^HSI","Hang Seng","ÍNDICES"),
+        ("^STOXX50E","EuroStoxx 50","ÍNDICES"),("^BVSP","BOVESPA","ÍNDICES"),
+        # Commodities
         ("GC=F","Oro","COMMODITIES"),("CL=F","Petróleo WTI","COMMODITIES"),
         ("SI=F","Plata","COMMODITIES"),("HG=F","Cobre","COMMODITIES"),
-        ("BTC-USD","Bitcoin","COMMODITIES"),
+        ("NG=F","Gas Natural","COMMODITIES"),("BTC-USD","Bitcoin","COMMODITIES"),
+        # Monedas
         ("EURUSD=X","EUR/USD","MONEDAS"),("GBPUSD=X","GBP/USD","MONEDAS"),
         ("DX-Y.NYB","DXY Index","MONEDAS"),("CLP=X","USD/CLP","MONEDAS"),
+        ("JPYUSD=X","USD/JPY","MONEDAS"),("AUDUSD=X","AUD/USD","MONEDAS"),
+        ("CNYUSD=X","USD/CNY","MONEDAS"),
+        # Tasas UST
         ("^TNX","US 10Y","TASAS UST"),("^FVX","US 5Y","TASAS UST"),
-        ("^IRX","US 3M","TASAS UST"),
+        ("^IRX","US 3M","TASAS UST"),("^TYX","US 30Y","TASAS UST"),
     ]
+    # Grupos para batch download (tickers compatibles juntos)
+    _GRUPOS = {
+        "us_idx":  ["^GSPC","^IXIC","^DJI","^RUT","^VIX","^TNX","^FVX","^IRX","^TYX"],
+        "gl_idx":  ["^GDAXI","^IBEX","^N225","^HSI","^STOXX50E","^BVSP"],
+        "commod":  ["GC=F","CL=F","SI=F","HG=F","NG=F","BTC-USD"],
+        "fx":      ["EURUSD=X","GBPUSD=X","DX-Y.NYB","CLP=X","JPYUSD=X","AUDUSD=X","CNYUSD=X"],
+    }
     SP500 = ["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA","JPM","V","MA",
              "UNH","XOM","JNJ","PG","HD","AVGO","CVX","MRK","LLY","ABBV",
              "COST","PEP","KO","ADBE","WMT","CRM","MCD","CSCO","ABT","ACN",
@@ -634,31 +651,69 @@ def _generar_trading_data():
         p1a = float(s.iloc[-252]) if len(s) >= 252 else float(s.iloc[0])
         return p, p1, p1m, p1a
 
-    # ── MACRO: descarga individual por ticker (más confiable para índices/FX/futures) ──
-    def get_row(tkr, nom, cat):
+    def _batch_close(tickers):
+        """Descarga grupo de tickers en batch, retorna {ticker: close_series}."""
+        result = {}
         try:
-            df = yf.download(tkr, period="1y", auto_adjust=False,
-                             progress=False, threads=False)
-            if df.empty:
-                return None
-            if isinstance(df.columns, pd.MultiIndex):
-                df.columns = df.columns.get_level_values(0)
-            close = df["Close"].dropna()
+            raw = yf.download(tickers, period="1y", auto_adjust=False,
+                              progress=False, group_by="ticker", threads=False)
+            if raw.empty:
+                return result
+            is_multi = isinstance(raw.columns, pd.MultiIndex)
+            for t in tickers:
+                try:
+                    if is_multi:
+                        lvl0 = raw.columns.get_level_values(0)
+                        if t in lvl0:
+                            sub = raw[t]
+                            if "Close" in sub.columns:
+                                result[t] = pd.to_numeric(sub["Close"], errors="coerce")
+                    else:
+                        if "Close" in raw.columns:
+                            result[t] = pd.to_numeric(raw["Close"], errors="coerce")
+                except Exception:
+                    continue
+        except Exception:
+            pass
+        return result
+
+    # ── Descargar todos los grupos en batch ──────────────────────
+    _all_closes = {}
+    for _grp_tickers in _GRUPOS.values():
+        _all_closes.update(_batch_close(_grp_tickers))
+
+    # ── Para tickers que fallaron en batch, intentar individual ──
+    _all_macro_tickers = [t for t, _, _ in MACRO_ITEMS]
+    for tkr in _all_macro_tickers:
+        if tkr not in _all_closes:
+            try:
+                df_i = yf.download(tkr, period="1y", auto_adjust=False,
+                                   progress=False, threads=False)
+                if not df_i.empty:
+                    if isinstance(df_i.columns, pd.MultiIndex):
+                        df_i.columns = df_i.columns.get_level_values(0)
+                    _all_closes[tkr] = pd.to_numeric(df_i.get("Close", pd.Series()), errors="coerce")
+            except Exception:
+                pass
+
+    macro_rows = []
+    for tkr, nom, cat in MACRO_ITEMS:
+        try:
+            close = _all_closes.get(tkr, pd.Series(dtype=float))
             st_ = _stats(close)
             if st_ is None:
-                return None
+                continue
             p, p1, p1m, p1a = st_
-            return {
+            macro_rows.append({
                 "Activo": nom, "Ticker": tkr, "Categoría": cat,
                 "Último Valor": round(p, 4),
                 "Cambio Día %": round((p/p1-1)*100, 2),
                 "Cambio 1M %":  round((p/p1m-1)*100, 2),
                 "Cambio 1A %":  round((p/p1a-1)*100, 2),
-            }
+            })
         except Exception:
-            return None
+            continue
 
-    macro_rows = [r for tkr, nom, cat in MACRO_ITEMS for r in [get_row(tkr, nom, cat)] if r]
     df_macro = pd.DataFrame(macro_rows) if macro_rows else pd.DataFrame(
         columns=["Activo","Ticker","Categoría","Último Valor","Cambio Día %","Cambio 1M %","Cambio 1A %"])
 
@@ -726,27 +781,216 @@ def cargar_hoja(ruta, hoja):
     return datos.get(hoja, pd.DataFrame())
 
 
+@st.cache_data(ttl=600, show_spinner=False)
+def _noticias_yfinance():
+    """Obtiene noticias financieras desde yfinance como fallback."""
+    try:
+        import yfinance as yf
+        all_news = []
+        for tkr in ["SPY","QQQ","GLD","TLT","^GSPC"]:
+            try:
+                news = yf.Ticker(tkr).news or []
+                for n in news:
+                    content = n.get("content", {})
+                    titulo = content.get("title", n.get("title", ""))
+                    fuente = content.get("provider", {}).get("displayName", n.get("publisher", ""))
+                    url    = content.get("canonicalUrl", {}).get("url", n.get("link", "#"))
+                    ts     = content.get("pubDate", "")
+                    if not titulo:
+                        continue
+                    try:
+                        fecha = datetime.fromisoformat(ts[:19]).strftime("%Y-%m-%d %H:%M") if ts else ""
+                    except Exception:
+                        fecha = ""
+                    all_news.append({"Título": titulo, "Fuente": fuente or "Yahoo Finance",
+                                     "URL": url, "Fecha": fecha, "Relevante": "SÍ"})
+            except Exception:
+                continue
+        seen, unique = set(), []
+        for n in all_news:
+            if n["Título"] not in seen:
+                seen.add(n["Título"])
+                unique.append(n)
+        return pd.DataFrame(unique[:60]) if unique else pd.DataFrame()
+    except Exception:
+        return pd.DataFrame()
+
+
 @st.cache_data(ttl=60)
 def cargar_noticias():
     ruta = os.path.join(DATA_DIR, "noticias", "noticias_hoy.csv")
-    if not os.path.exists(ruta):
-        return pd.DataFrame()
-    try:
-        return pd.read_csv(ruta, encoding="utf-8-sig").head(100)
-    except Exception:
-        return pd.DataFrame()
+    if os.path.exists(ruta):
+        try:
+            df = pd.read_csv(ruta, encoding="utf-8-sig").head(100)
+            if not df.empty:
+                return df
+        except Exception:
+            pass
+    return _noticias_yfinance()
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _podcasts_fallback():
+    """Podcasts financieros curados — siempre disponibles."""
+    return pd.DataFrame([
+        {"Tipo":"PODCAST","Título":"Motley Fool Money — Weekly Market Update","Fuente":"Motley Fool","URL":"https://www.fool.com/podcasts/motley-fool-money/","Fecha":""},
+        {"Tipo":"PODCAST","Título":"We Study Billionaires — Value Investing Deep Dive","Fuente":"The Investor's Podcast","URL":"https://www.theinvestorspodcast.com/","Fecha":""},
+        {"Tipo":"PODCAST","Título":"Planet Money — How The Economy Works","Fuente":"NPR","URL":"https://www.npr.org/podcasts/510289/planet-money","Fecha":""},
+        {"Tipo":"PODCAST","Título":"Masters in Business — Bloomberg Podcast","Fuente":"Bloomberg","URL":"https://www.bloomberg.com/podcasts/masters_in_business","Fecha":""},
+        {"Tipo":"PODCAST","Título":"Acquired — Tech & Business Deep Dives","Fuente":"Acquired","URL":"https://www.acquired.fm/","Fecha":""},
+        {"Tipo":"PODCAST","Título":"Chat With Traders — Professional Trading Insights","Fuente":"Chat With Traders","URL":"https://chatwithtraders.com/","Fecha":""},
+        {"Tipo":"PODCAST","Título":"The All-In Podcast — Tech, Finance & Politics","Fuente":"All-In","URL":"https://www.allinpodcast.co/","Fecha":""},
+        {"Tipo":"PODCAST","Título":"Odd Lots — Bloomberg Markets Deep Dives","Fuente":"Bloomberg","URL":"https://www.bloomberg.com/podcasts/odd_lots","Fecha":""},
+    ])
 
 
 @st.cache_data(ttl=120)
 def cargar_social(tipo=None):
     ruta = os.path.join(DATA_DIR, "social", "social_hoy.csv")
-    if not os.path.exists(ruta):
-        return pd.DataFrame()
+    if os.path.exists(ruta):
+        try:
+            df = pd.read_csv(ruta, encoding="utf-8-sig")
+            if not df.empty:
+                return df[df["Tipo"] == tipo] if tipo else df
+        except Exception:
+            pass
+    # Fallback: podcasts curados cuando no hay CSV
+    df_fb = _podcasts_fallback()
+    if tipo:
+        return df_fb[df_fb["Tipo"] == tipo]
+    return df_fb
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _get_stock_info(ticker):
+    """Obtiene información fundamental de un ticker via yfinance."""
     try:
-        df = pd.read_csv(ruta, encoding="utf-8-sig")
-        return df[df["Tipo"] == tipo] if tipo else df
+        import yfinance as yf
+        t = yf.Ticker(ticker)
+        info = t.info or {}
+        fi = t.fast_info
+
+        def fmt_val(v, fmt=",.2f"):
+            try:
+                return f"{float(v):{fmt}}" if v not in (None, "N/A", "") else "—"
+            except Exception:
+                return "—"
+
+        def fmt_bn(v):
+            try:
+                v = float(v)
+                if v >= 1e12: return f"{v/1e12:.2f}T"
+                if v >= 1e9:  return f"{v/1e9:.2f}B"
+                if v >= 1e6:  return f"{v/1e6:.2f}M"
+                return f"{v:,.0f}"
+            except Exception:
+                return "—"
+
+        def fmt_pct(v):
+            try: return f"{float(v)*100:.2f}%"
+            except Exception: return "—"
+
+        # Precio actual
+        try:
+            prev_close = fmt_val(info.get("previousClose") or fi.previous_close)
+            open_      = fmt_val(info.get("open") or fi.open)
+        except Exception:
+            prev_close = fmt_val(info.get("previousClose"))
+            open_      = fmt_val(info.get("open"))
+
+        try:
+            last_price = fmt_val(fi.last_price)
+        except Exception:
+            last_price = fmt_val(info.get("regularMarketPrice"))
+
+        # 52W
+        w52_low  = fmt_val(info.get("fiftyTwoWeekLow"))
+        w52_high = fmt_val(info.get("fiftyTwoWeekHigh"))
+        w52_rng  = f"{w52_low} – {w52_high}"
+
+        # Volume
+        vol     = fmt_bn(info.get("volume") or info.get("regularMarketVolume"))
+        avg_vol = fmt_bn(info.get("averageVolume"))
+        avg_10d = fmt_bn(info.get("averageVolume10days"))
+
+        # Fundamentales
+        mktcap   = fmt_bn(info.get("marketCap"))
+        ev       = fmt_bn(info.get("enterpriseValue"))
+        beta     = fmt_val(info.get("beta"), ".2f")
+        pe_ttm   = fmt_val(info.get("trailingPE"), ".2f")
+        pe_fwd   = fmt_val(info.get("forwardPE"), ".2f")
+        peg      = fmt_val(info.get("pegRatio"), ".2f")
+        ps       = fmt_val(info.get("priceToSalesTrailing12Months"), ".2f")
+        pb       = fmt_val(info.get("priceToBook"), ".2f")
+        ev_rev   = fmt_val(info.get("enterpriseToRevenue"), ".2f")
+        ev_ebit  = fmt_val(info.get("enterpriseToEbitda"), ".2f")
+        eps_ttm  = fmt_val(info.get("trailingEps"), ".2f")
+        target1y = fmt_val(info.get("targetMeanPrice"), ".2f")
+
+        # Dividendo
+        div_rate  = fmt_val(info.get("dividendRate"), ".2f")
+        div_yield = fmt_pct(info.get("dividendYield"))
+        div_str   = f"{div_rate} ({div_yield})" if div_rate != "—" else "—"
+        ex_div    = str(info.get("exDividendDate", ""))[:10] or "—"
+
+        # Earnings date
+        try:
+            cal = t.calendar
+            if cal is not None and not cal.empty and "Earnings Date" in cal:
+                earn_date = str(list(cal["Earnings Date"])[0])[:10]
+            else:
+                earn_date = "—"
+        except Exception:
+            earn_date = "—"
+
+        # Acciones
+        shares_out = fmt_bn(info.get("sharesOutstanding"))
+        float_sh   = fmt_bn(info.get("floatShares"))
+        pct_ins    = fmt_pct(info.get("heldPercentInsiders"))
+        pct_inst   = fmt_pct(info.get("heldPercentInstitutions"))
+        short_sh   = fmt_bn(info.get("sharesShort"))
+        short_rat  = fmt_val(info.get("shortRatio"), ".2f")
+        short_pct  = fmt_pct(info.get("shortPercentOfFloat"))
+
+        return {
+            "precio": {
+                "Precio Anterior":   prev_close,
+                "Apertura":         open_,
+                "Precio Actual":    last_price,
+                "Rango 52 Semanas": w52_rng,
+                "Volumen":          vol,
+                "Volumen Prom.":    avg_vol,
+                "Vol Prom 10d":     avg_10d,
+            },
+            "valuacion": {
+                "Market Cap":       mktcap,
+                "Enterprise Value": ev,
+                "Beta (5Y)":        beta,
+                "P/E Trailing":     pe_ttm,
+                "P/E Forward":      pe_fwd,
+                "PEG Ratio":        peg,
+                "Price/Sales":      ps,
+                "Price/Book":       pb,
+                "EV/Revenue":       ev_rev,
+                "EV/EBITDA":        ev_ebit,
+                "EPS (TTM)":        eps_ttm,
+                "Target 1 Año":     target1y,
+                "Dividendo/Yield":  div_str,
+                "Ex-Dividendo":     ex_div,
+                "Próx. Earnings":   earn_date,
+            },
+            "acciones": {
+                "Acciones Vigentes": shares_out,
+                "Float":             float_sh,
+                "% Insiders":        pct_ins,
+                "% Institucionales": pct_inst,
+                "Posición Short":    short_sh,
+                "Short Ratio":       short_rat,
+                "Short % Float":     short_pct,
+            },
+        }
     except Exception:
-        return pd.DataFrame()
+        return {}
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -1774,12 +2018,8 @@ if "Dashboard" in pagina:
                     </style>""", unsafe_allow_html=True)
 
         periodo_dash = st.session_state.get("periodo_dash", "3M")
-        # Usar datos ya descargados del batch macro (siempre disponibles en cloud)
-        _datos_batch = _generar_trading_data()
-        _sp_from_macro = None
         ruta_sp = os.path.join(DATA_DIR, "indices", "SP500.csv")
         df_sp = cargar_csv(ruta_sp, skiprows=[1, 2])
-        # Si no hay CSV local, usar yfinance directamente
         if df_sp.empty:
             df_sp = _yf_fallback("^GSPC")
 
@@ -2083,6 +2323,168 @@ if "Dashboard" in pagina:
             if fig_bar.data:
                 st.plotly_chart(fig_bar, use_container_width=True)
 
+    # ── TERCERA FILA: Gráfico del Día + Lista de Seguimiento + Múltiplos ──
+    st.markdown("<hr style='margin:18px 0 14px;border-color:rgba(197,168,96,0.18)!important;'>", unsafe_allow_html=True)
+    tr_left, tr_center, tr_right = st.columns([3.6, 3.2, 2.8])
+
+    with tr_left:
+        st.markdown('<div style="font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;color:#a07820;font-weight:700;padding:5px 0 8px;border-bottom:1.5px solid rgba(197,168,96,0.3);margin-bottom:10px;">GRÁFICO DEL DÍA</div>', unsafe_allow_html=True)
+        _gd_opciones = {
+            "S&P 500": "^GSPC", "Nasdaq 100": "QQQ", "Dow Jones": "^DJI",
+            "VIX": "^VIX", "Oro": "GC=F", "Petróleo WTI": "CL=F",
+            "Bitcoin": "BTC-USD", "EUR/USD": "EURUSD=X", "DXY": "DX-Y.NYB",
+            "US 10Y": "^TNX", "AAPL": "AAPL", "NVDA": "NVDA", "TSLA": "TSLA",
+            "SPY": "SPY", "QQQ": "QQQ", "TLT": "TLT", "ARKK": "ARKK",
+        }
+        _gd_sel = st.selectbox("Instrumento", list(_gd_opciones.keys()), key="gd_sel", label_visibility="collapsed")
+        _gd_ticker = _gd_opciones[_gd_sel]
+
+        @st.cache_data(ttl=300, show_spinner=False)
+        def _grafico_dia(ticker):
+            try:
+                import yfinance as yf
+                df = yf.download(ticker, period="1d", interval="5m",
+                                 auto_adjust=False, progress=False)
+                if df.empty:
+                    df = yf.download(ticker, period="5d", interval="30m",
+                                     auto_adjust=False, progress=False)
+                if isinstance(df.columns, pd.MultiIndex):
+                    df.columns = df.columns.get_level_values(0)
+                return df
+            except Exception:
+                return pd.DataFrame()
+
+        df_gd = _grafico_dia(_gd_ticker)
+        if not df_gd.empty and "Close" in df_gd.columns:
+            _chg_gd = float(df_gd["Close"].iloc[-1]) / float(df_gd["Close"].iloc[0]) - 1
+            _col_gd = "#0066cc" if _chg_gd >= 0 else "#cc3300"
+            fig_gd = go.Figure()
+            if all(c in df_gd.columns for c in ["Open","High","Low","Close"]):
+                fig_gd.add_trace(go.Candlestick(
+                    x=df_gd.index,
+                    open=df_gd["Open"], high=df_gd["High"],
+                    low=df_gd["Low"],   close=df_gd["Close"],
+                    increasing_line_color="#0066cc", decreasing_line_color="#cc3300",
+                    increasing_fillcolor="rgba(0,102,204,0.7)",
+                    decreasing_fillcolor="rgba(204,51,0,0.7)",
+                    showlegend=False,
+                ))
+            else:
+                fig_gd.add_trace(go.Scatter(
+                    x=df_gd.index, y=df_gd["Close"],
+                    line=dict(color=_col_gd, width=2),
+                ))
+            fig_gd.update_layout(
+                paper_bgcolor="#0a0a0a", plot_bgcolor="#0a0a0a",
+                height=260, margin=dict(l=5, r=5, t=5, b=5),
+                xaxis=dict(gridcolor="rgba(197,168,96,0.1)", tickfont=dict(color="rgba(255,255,255,0.4)",size=8), rangeslider=dict(visible=False)),
+                yaxis=dict(gridcolor="rgba(197,168,96,0.1)", tickfont=dict(color="rgba(255,255,255,0.4)",size=8), tickformat=",.2f"),
+                showlegend=False,
+            )
+            _ult = float(df_gd["Close"].iloc[-1])
+            st.markdown(
+                f'<div style="display:flex;gap:16px;margin-bottom:6px;">'
+                f'<span style="font-family:Playfair Display,serif;font-size:1.1rem;font-weight:800;color:#0a0a0a;">{_ult:,.2f}</span>'
+                f'<span style="color:{_col_gd};font-weight:700;font-size:.85rem;">{"▲" if _chg_gd>=0 else "▼"} {abs(_chg_gd)*100:.2f}%</span>'
+                f'</div>', unsafe_allow_html=True
+            )
+            st.plotly_chart(fig_gd, use_container_width=True)
+        else:
+            st.markdown('<div style="color:rgba(197,168,96,0.4);font-size:.75rem;">Sin datos intraday disponibles</div>', unsafe_allow_html=True)
+
+    with tr_center:
+        st.markdown('<div style="font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;color:#a07820;font-weight:700;padding:5px 0 8px;border-bottom:1.5px solid rgba(197,168,96,0.3);margin-bottom:10px;">LISTA DE SEGUIMIENTO</div>', unsafe_allow_html=True)
+        # Lista de seguimiento editable via session_state
+        if "watchlist" not in st.session_state:
+            st.session_state["watchlist"] = ["AAPL","MSFT","NVDA","GOOGL","TSLA","JPM","GLD","TLT"]
+
+        _wl_input = st.text_input("Agregar ticker", "", key="wl_add", placeholder="ej: META").upper().strip()
+        if _wl_input and _wl_input not in st.session_state["watchlist"]:
+            st.session_state["watchlist"].append(_wl_input)
+
+        @st.cache_data(ttl=300, show_spinner=False)
+        def _watchlist_data(tickers_tuple):
+            try:
+                import yfinance as yf
+                raw = yf.download(list(tickers_tuple), period="2d", auto_adjust=False,
+                                  progress=False, group_by="ticker", threads=False)
+                rows = []
+                is_multi = isinstance(raw.columns, pd.MultiIndex)
+                for t in tickers_tuple:
+                    try:
+                        if is_multi and t in raw.columns.get_level_values(0):
+                            close = pd.to_numeric(raw[t]["Close"], errors="coerce").dropna()
+                        elif not is_multi and "Close" in raw.columns:
+                            close = pd.to_numeric(raw["Close"], errors="coerce").dropna()
+                        else:
+                            continue
+                        if len(close) < 2: continue
+                        p, p1 = float(close.iloc[-1]), float(close.iloc[-2])
+                        chg = round((p/p1-1)*100, 2)
+                        rows.append({"Ticker": t, "Precio": f"{p:,.2f}", "Cambio": chg})
+                    except Exception:
+                        continue
+                return rows
+            except Exception:
+                return []
+
+        _wl_rows = _watchlist_data(tuple(st.session_state["watchlist"]))
+        for _wr in _wl_rows:
+            _c = "#0066cc" if _wr["Cambio"] >= 0 else "#cc3300"
+            _s = "▲" if _wr["Cambio"] >= 0 else "▼"
+            _rem_key = f"wl_rm_{_wr['Ticker']}"
+            _rc1, _rc2, _rc3, _rc4 = st.columns([1.5, 1.5, 1, 0.5])
+            _rc1.markdown(f'<span style="font-weight:700;font-size:.8rem;color:#0a0a0a;">{_wr["Ticker"]}</span>', unsafe_allow_html=True)
+            _rc2.markdown(f'<span style="font-size:.8rem;color:#0a0a0a;">{_wr["Precio"]}</span>', unsafe_allow_html=True)
+            _rc3.markdown(f'<span style="color:{_c};font-weight:700;font-size:.78rem;">{_s} {abs(_wr["Cambio"]):.2f}%</span>', unsafe_allow_html=True)
+            if _rc4.button("✕", key=_rem_key, help="Eliminar"):
+                st.session_state["watchlist"].remove(_wr["Ticker"])
+                st.rerun()
+
+    with tr_right:
+        st.markdown('<div style="font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;color:#a07820;font-weight:700;padding:5px 0 8px;border-bottom:1.5px solid rgba(197,168,96,0.3);margin-bottom:10px;">MÚLTIPLOS DE MERCADO</div>', unsafe_allow_html=True)
+
+        @st.cache_data(ttl=3600, show_spinner=False)
+        def _multiplos_mercado():
+            try:
+                import yfinance as yf
+                mult = []
+                _mp = [("SPY","S&P 500"),("QQQ","Nasdaq 100"),("DIA","Dow Jones"),
+                       ("IWM","Russell 2K"),("XLK","Tecnología"),("XLF","Financiero"),
+                       ("XLE","Energía"),("XLV","Salud")]
+                for tkr, nom in _mp:
+                    try:
+                        info = yf.Ticker(tkr).info
+                        pe   = info.get("trailingPE") or info.get("forwardPE")
+                        pb   = info.get("priceToBook")
+                        ps   = info.get("priceToSalesTrailing12Months")
+                        mult.append({
+                            "ETF": nom,
+                            "P/E": f"{float(pe):.1f}" if pe else "—",
+                            "P/B": f"{float(pb):.1f}" if pb else "—",
+                            "P/S": f"{float(ps):.1f}" if ps else "—",
+                        })
+                    except Exception:
+                        continue
+                return mult
+            except Exception:
+                return []
+
+        _mult_rows = _multiplos_mercado()
+        if _mult_rows:
+            for mr in _mult_rows:
+                st.markdown(
+                    f'<div style="display:flex;justify-content:space-between;padding:5px 8px;'
+                    f'border-bottom:1px solid rgba(197,168,96,0.08);font-size:.73rem;">'
+                    f'<span style="color:#6b5a2a;font-weight:600;">{mr["ETF"]}</span>'
+                    f'<span style="color:#0a0a0a;">P/E <b>{mr["P/E"]}</b></span>'
+                    f'<span style="color:#0a0a0a;">P/B <b>{mr["P/B"]}</b></span>'
+                    f'<span style="color:#0a0a0a;">P/S <b>{mr["P/S"]}</b></span>'
+                    f'</div>', unsafe_allow_html=True
+                )
+        else:
+            st.markdown('<div style="color:rgba(197,168,96,0.4);font-size:.75rem;">Cargando múltiplos...</div>', unsafe_allow_html=True)
+
 
 # ══════════════════════════════════════════════════════════════════
 # PÁGINA 2 — ANÁLISIS TÉCNICO
@@ -2130,7 +2532,7 @@ elif "Técnico" in pagina:
     with sel_cols[0]:
         mercado = st.selectbox(
             "Mercado",
-            ["Índices", "Commodities", "Empresas SP500", "Empresas Nasdaq100", "Empresas Dow30"],
+            ["Índices", "Commodities", "ETFs", "Empresas SP500", "Empresas Nasdaq100", "Empresas Dow30"],
             key="at_mercado",
         )
 
@@ -2213,8 +2615,57 @@ elif "Técnico" in pagina:
         nombre_arch = ops[sel]; titulo = sel
         ruta = os.path.join(DATA_DIR, "commodities", f"{nombre_arch}.csv")
 
+    elif mercado == "ETFs":
+        _ETF_MAP = {
+            # Renta Variable EEUU
+            "SPY — S&P 500":          "SPY",
+            "QQQ — Nasdaq 100":       "QQQ",
+            "DIA — Dow Jones":        "DIA",
+            "IWM — Russell 2000":     "IWM",
+            "VOO — Vanguard S&P500":  "VOO",
+            "VTI — Total Market":     "VTI",
+            # Sectores
+            "XLK — Tecnología":       "XLK",
+            "XLF — Financiero":       "XLF",
+            "XLE — Energía":          "XLE",
+            "XLV — Salud":            "XLV",
+            "XLI — Industrial":       "XLI",
+            "XLC — Comunicaciones":   "XLC",
+            "XLY — Consumo Discr.":   "XLY",
+            "XLP — Consumo Básico":   "XLP",
+            "XLRE — Real Estate":     "XLRE",
+            "XLU — Utilities":        "XLU",
+            "XLB — Materiales":       "XLB",
+            # Renta Fija
+            "TLT — Bonos 20Y+":       "TLT",
+            "IEF — Bonos 7-10Y":      "IEF",
+            "SHY — Bonos 1-3Y":       "SHY",
+            "HYG — High Yield":       "HYG",
+            "LQD — Corp. Inv. Grade": "LQD",
+            # Internacionales
+            "EFA — Mercados Desarro.":"EFA",
+            "EEM — Mercados Emerg.":  "EEM",
+            "FXI — China":            "FXI",
+            "EWZ — Brasil":           "EWZ",
+            "EWJ — Japón":            "EWJ",
+            # Commodities / Alt
+            "GLD — Oro":              "GLD",
+            "SLV — Plata":            "SLV",
+            "USO — Petróleo":         "USO",
+            "ARKK — Innovación":      "ARKK",
+            "SOXX — Semiconductores": "SOXX",
+            "ICLN — Energía Limpia":  "ICLN",
+            "LIT — Litio":            "LIT",
+        }
+        sel_etf = st.selectbox("ETF", list(_ETF_MAP.keys()), key="at_inst_etf")
+        titulo = sel_etf.split("—")[0].strip()
+        _etf_ticker = _ETF_MAP[sel_etf]
+        ruta = os.path.join(DATA_DIR, "raw", "sp500", f"{_etf_ticker}.csv")
+        # Agregar al mapa de tickers para que el resto del código lo encuentre
+        _TICKER_MAP[titulo] = _etf_ticker
+
     else:
-        raw = {"Empresas SP500": "sp500", "Empresas Nasdaq100": "nasdaq100", "Empresas Dow30": "dow30"}[mercado]
+        raw = {"Empresas SP500": "sp500", "Empresas Nasdaq100": "nasdaq100", "Empresas Dow30": "dow30"}.get(mercado, "sp500")
         hoja = {
             "Empresas SP500":   "SP500 Empresas",
             "Empresas Nasdaq100": "Nasdaq100 Empresas",
@@ -2310,6 +2761,53 @@ elif "Técnico" in pagina:
             fig, tabla_ind = grafico_interactivo(df_plot, titulo, indicadores_sel)
             st.plotly_chart(fig, use_container_width=True)
 
+            # ── Panel de estadísticas del instrumento ─────────────
+            _yf_tick_info = _TICKER_MAP.get(titulo, titulo)
+            _es_empresa = mercado in ("Empresas SP500","Empresas Nasdaq100","Empresas Dow30")
+            _stock_info = _get_stock_info(_yf_tick_info)
+
+            if _stock_info:
+                st.markdown("<hr style='margin:12px 0 6px;border-color:rgba(197,168,96,0.15)!important;'>", unsafe_allow_html=True)
+                st.markdown('<div class="section-header">ESTADÍSTICAS DEL INSTRUMENTO</div>', unsafe_allow_html=True)
+
+                def _kv_row(label, value, highlight=False):
+                    color = "#0a0a0a"
+                    if highlight:
+                        try:
+                            v = float(str(value).replace(",","").replace("%","").replace("B","").replace("M","").replace("T",""))
+                            color = "#0066cc" if v > 0 else "#cc3300"
+                        except Exception:
+                            pass
+                    return (
+                        f'<div style="display:flex;justify-content:space-between;align-items:center;'
+                        f'padding:5px 10px;border-bottom:1px solid rgba(197,168,96,0.08);">'
+                        f'<span style="font-size:.72rem;color:#6b5a2a;font-weight:500;">{label}</span>'
+                        f'<span style="font-size:.74rem;font-weight:700;color:{color};">{value}</span>'
+                        f'</div>'
+                    )
+
+                def _kv_block(titulo_bloque, data_dict):
+                    rows = "".join(_kv_row(k, v) for k, v in data_dict.items())
+                    return (
+                        f'<div style="background:linear-gradient(135deg,#fdf9f2,#f5ede0);'
+                        f'border:1.5px solid rgba(197,168,96,0.4);border-left:3px solid #c5a860;'
+                        f'border-radius:6px;overflow:hidden;margin-bottom:10px;">'
+                        f'<div style="background:rgba(197,168,96,0.12);padding:5px 10px;'
+                        f'font-size:.6rem;letter-spacing:3px;font-weight:700;color:#a07820;'
+                        f'text-transform:uppercase;">{titulo_bloque}</div>'
+                        f'{rows}</div>'
+                    )
+
+                _si_cols = st.columns(3)
+                with _si_cols[0]:
+                    st.markdown(_kv_block("PRECIO & VOLUMEN", _stock_info.get("precio", {})), unsafe_allow_html=True)
+                with _si_cols[1]:
+                    st.markdown(_kv_block("VALUACIÓN & RATIOS", _stock_info.get("valuacion", {})), unsafe_allow_html=True)
+                with _si_cols[2]:
+                    st.markdown(_kv_block("ESTADÍSTICAS ACCIONARIAS", _stock_info.get("acciones", {})), unsafe_allow_html=True)
+
+                st.markdown("<hr style='margin:6px 0 12px;border-color:rgba(197,168,96,0.12)!important;'>", unsafe_allow_html=True)
+
             # ── Indicadores + Métricas de Riesgo ──────────────────
             col_ind, col_risk = st.columns([1.2, 1])
 
@@ -2339,6 +2837,8 @@ elif "Técnico" in pagina:
                 st.markdown('<div class="section-header">MÉTRICAS DE RIESGO</div>', unsafe_allow_html=True)
                 ruta_sp2 = os.path.join(DATA_DIR, "indices", "SP500.csv")
                 df_sp2 = cargar_csv(ruta_sp2, skiprows=[1, 2])
+                if df_sp2.empty:
+                    df_sp2 = _yf_fallback("^GSPC")
                 bench = df_sp2["Close"].reindex(df_plot.index).ffill() if not df_sp2.empty else None
                 metricas = calc_metricas_riesgo(df_plot["Close"].dropna(), len(df_plot), bench)
                 if metricas:
@@ -2372,17 +2872,14 @@ elif "Técnico" in pagina:
             c4.metric("Vol USD 20d",   f"${vol_usd_20/1e9:.2f}B" if vol_usd_20 and vol_usd_20 > 1e9
                                         else (f"${vol_usd_20/1e6:.1f}M" if vol_usd_20 else "-"))
             acciones = None
-            _ticker_yf_map = {
-                "S&P 500":      "^GSPC",  "Nasdaq":       "^IXIC",  "Dow Jones":    "^DJI",
-                "Oro":          "GC=F",   "Petróleo WTI": "CL=F",   "Plata":        "SI=F",
-                "Cobre":        "HG=F",   "Bitcoin":      "BTC-USD", "Litio ETF":   "LIT",
-                "Albemarle":    "ALB",    "SQM":          "SQM",
-            }
-            _yf_ticker = _ticker_yf_map.get(titulo, titulo)
+            _yf_ticker = _TICKER_MAP.get(titulo, titulo)
             try:
                 import yfinance as yf
-                info = yf.Ticker(_yf_ticker).fast_info
-                acciones = info.get("shares", None)
+                fi = yf.Ticker(_yf_ticker).fast_info
+                try:
+                    acciones = fi.shares
+                except Exception:
+                    acciones = None
             except Exception:
                 pass
             c5.metric("Acciones (M)", f"{acciones/1e6:,.0f}" if acciones else "-")
@@ -2867,18 +3364,20 @@ elif "Fundamental" in pagina:
                     df_heat["label"] = df_heat.apply(
                         lambda r: f"{r['Ticker']}<br>{r['Cambio Día %']:+.2f}%", axis=1
                     )
-                    df_heat["abs_cap"] = df_heat["Último Precio"].abs().clip(lower=0.01)
+                    _precio_col = "Precio" if "Precio" in df_heat.columns else ("Último Precio" if "Último Precio" in df_heat.columns else None)
+                    df_heat["abs_cap"] = (df_heat[_precio_col].abs().clip(lower=0.01) if _precio_col else pd.Series(1.0, index=df_heat.index))
+                    _precio_vals = df_heat[_precio_col] if _precio_col else pd.Series(0, index=df_heat.index)
 
                     fig_h = go.Figure(go.Treemap(
                         labels=df_heat["label"],
                         parents=[""] * len(df_heat),
                         values=df_heat["abs_cap"],
-                        customdata=df_heat[["Ticker", "Cambio Día %", "Último Precio", "Cambio 1M %"]].values,
+                        customdata=pd.concat([df_heat[["Ticker","Cambio Día %","Cambio 1M %"]], _precio_vals.rename("Precio")], axis=1).values,
                         hovertemplate=(
                             "<b>%{customdata[0]}</b><br>"
-                            "Precio: $%{customdata[2]:.2f}<br>"
+                            "Precio: $%{customdata[3]:.2f}<br>"
                             "Día: <b>%{customdata[1]:+.2f}%</b><br>"
-                            "1M: %{customdata[3]:+.2f}%<extra></extra>"
+                            "1M: %{customdata[2]:+.2f}%<extra></extra>"
                         ),
                         marker=dict(
                             colors=df_heat["Cambio Día %"],
