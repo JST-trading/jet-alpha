@@ -539,34 +539,160 @@ hr { border-color: rgba(197,168,96,0.25) !important; }
 
 
 # ══════════════════════════════════════════════════════════════════
-# HELPERS DE CARGA
+# HELPERS DE CARGA — con fallback a yfinance en Streamlit Cloud
 # ══════════════════════════════════════════════════════════════════
 
-@st.cache_data(ttl=300)
-def cargar_csv(ruta, skiprows=None):
-    if not os.path.exists(ruta):
-        return pd.DataFrame()
+# Mapeo ruta → ticker yfinance para fallback en la nube
+_RUTA_A_TICKER = {
+    "SP500":           "^GSPC",  "NASDAQ_COMP":  "^IXIC",  "DOW_JONES":    "^DJI",
+    "VIX":             "^VIX",   "RUSSELL2000":  "^RUT",
+    "Oro":             "GC=F",   "Petroleo_WTI": "CL=F",   "Plata":        "SI=F",
+    "Cobre":           "HG=F",   "Bitcoin":      "BTC-USD", "Litio_ETF":   "LIT",
+    "Albemarle_Litio": "ALB",    "SQM_Litio":    "SQM",
+    "EUR_USD":         "EURUSD=X","GBP_USD":     "GBPUSD=X","DXY_Dollar_Index":"DX-Y.NYB",
+    "USD_JPY":         "JPYUSD=X","USD_CLP":     "CLP=X",  "AUD_USD":      "AUDUSD=X",
+    "US10Y":           "^TNX",   "US5Y":         "^FVX",   "US3M":         "^IRX",
+}
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _yf_fallback(ticker):
+    """Descarga 5 años de datos desde yfinance como DataFrame OHLCV."""
     try:
-        kw = {"index_col": 0, "parse_dates": True}
-        if skiprows:
-            kw["skiprows"] = skiprows
-        df = pd.read_csv(ruta, **kw)
-        df = df[pd.to_datetime(df.index, errors="coerce").notna()]
+        import yfinance as yf
+        df = yf.download(ticker, period="5y", auto_adjust=False,
+                         progress=False, threads=False)
+        if df.empty:
+            return pd.DataFrame()
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
         for c in df.columns:
             df[c] = pd.to_numeric(df[c], errors="coerce")
         return df
     except Exception:
         return pd.DataFrame()
 
+@st.cache_data(ttl=300)
+def cargar_csv(ruta, skiprows=None):
+    # Intentar desde CSV local primero
+    if os.path.exists(ruta) and os.path.getsize(ruta) > 500:
+        try:
+            kw = {"index_col": 0, "parse_dates": True}
+            if skiprows:
+                kw["skiprows"] = skiprows
+            df = pd.read_csv(ruta, **kw)
+            df = df[pd.to_datetime(df.index, errors="coerce").notna()]
+            for c in df.columns:
+                df[c] = pd.to_numeric(df[c], errors="coerce")
+            if not df.empty:
+                return df
+        except Exception:
+            pass
+    # Fallback: extraer nombre del archivo y buscar en yfinance
+    nombre = os.path.splitext(os.path.basename(ruta))[0]
+    ticker  = _RUTA_A_TICKER.get(nombre)
+    if not ticker:
+        # Para empresas individuales el nombre ES el ticker
+        ticker = nombre if nombre.replace("-","").replace(".","").isalnum() else None
+    if ticker:
+        df = _yf_fallback(ticker)
+        if not df.empty:
+            # Guardar para usos futuros
+            try:
+                os.makedirs(os.path.dirname(ruta), exist_ok=True)
+                df.to_csv(ruta)
+            except Exception:
+                pass
+            return df
+    return pd.DataFrame()
+
+
+@st.cache_data(ttl=1800, show_spinner=False)
+def _generar_trading_data():
+    """Genera el Excel de macros en memoria usando yfinance."""
+    import yfinance as yf
+    MACRO = [
+        ("^GSPC","S&P 500","ÍNDICES"),("^IXIC","Nasdaq","ÍNDICES"),
+        ("^DJI","Dow Jones","ÍNDICES"),("^RUT","Russell 2000","ÍNDICES"),
+        ("^VIX","VIX","ÍNDICES"),
+        ("GC=F","Oro","COMMODITIES"),("CL=F","Petróleo WTI","COMMODITIES"),
+        ("SI=F","Plata","COMMODITIES"),("HG=F","Cobre","COMMODITIES"),
+        ("BTC-USD","Bitcoin","COMMODITIES"),
+        ("EURUSD=X","EUR/USD","MONEDAS"),("GBPUSD=X","GBP/USD","MONEDAS"),
+        ("DX-Y.NYB","DXY Index","MONEDAS"),("CLP=X","USD/CLP","MONEDAS"),
+        ("^TNX","US 10Y","TASAS UST"),("^FVX","US 5Y","TASAS UST"),
+        ("^IRX","US 3M","TASAS UST"),
+    ]
+    SP500 = ["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA","JPM","V","MA",
+             "UNH","XOM","JNJ","PG","HD","AVGO","CVX","MRK","LLY","ABBV",
+             "COST","PEP","KO","ADBE","WMT","CRM","MCD","CSCO","ABT","ACN",
+             "GS","BA","GE","CAT","IBM","HON","INTC","TXN","QCOM","AMD",
+             "NFLX","PYPL","ISRG","BKNG","ADP","NOW","LOW","TGT","AMGN","DE"]
+    DOW30 = ["AAPL","AMGN","AXP","BA","CAT","CRM","CSCO","CVX","DIS","DOW",
+             "GS","HD","HON","IBM","INTC","JNJ","JPM","KO","MCD","MMM",
+             "MRK","MSFT","NKE","PG","TRV","UNH","V","VZ","WBA","WMT"]
+    NQ100 = ["AAPL","MSFT","NVDA","AMZN","META","GOOGL","TSLA","AVGO","COST","NFLX",
+             "AMD","ADBE","QCOM","PEP","CSCO","INTC","INTU","CMCSA","TMUS","AMGN",
+             "ISRG","AMAT","MU","LRCX","PANW","ADI","MELI","REGN","VRTX","CDNS"]
+
+    def get_row(tkr, nom, cat):
+        try:
+            h = yf.Ticker(tkr).history(period="5d")
+            if h.empty: return None
+            p   = float(h["Close"].iloc[-1])
+            p1  = float(h["Close"].iloc[-2]) if len(h)>=2 else p
+            h1m = yf.Ticker(tkr).history(period="1mo")
+            h1a = yf.Ticker(tkr).history(period="1y")
+            p1m = float(h1m["Close"].iloc[0]) if not h1m.empty else p
+            p1a = float(h1a["Close"].iloc[0]) if not h1a.empty else p
+            return {"Activo":nom,"Ticker":tkr,"Categoría":cat,
+                    "Precio":round(p,2),
+                    "Cambio Día %":round((p/p1-1)*100,2),
+                    "Cambio 1M %":round((p/p1m-1)*100,2),
+                    "Cambio 1A %":round((p/p1a-1)*100,2)}
+        except Exception:
+            return None
+
+    def emp_rows(tickers, folder):
+        rows = []
+        for t in tickers:
+            ruta = os.path.join(DATA_DIR,"raw",folder,f"{t}.csv")
+            df = cargar_csv(ruta, skiprows=[1,2])
+            if df.empty or "Close" not in df.columns or len(df)<2: continue
+            p   = float(df["Close"].iloc[-1])
+            p1  = float(df["Close"].iloc[-2])
+            p1m = float(df["Close"].iloc[-22]) if len(df)>=22 else p
+            p1a = float(df["Close"].iloc[-252]) if len(df)>=252 else p
+            rows.append({"Ticker":t,"Precio":round(p,2),
+                         "Cambio Día %":round((p/p1-1)*100,2),
+                         "Cambio 1M %":round((p/p1m-1)*100,2),
+                         "Cambio 1A %":round((p/p1a-1)*100,2)})
+        return pd.DataFrame(rows) if rows else pd.DataFrame(
+            columns=["Ticker","Precio","Cambio Día %","Cambio 1M %","Cambio 1A %"])
+
+    macro_rows = [r for t,n,c in MACRO for r in [get_row(t,n,c)] if r]
+    df_macro = pd.DataFrame(macro_rows) if macro_rows else pd.DataFrame()
+    df_sp    = emp_rows(SP500, "sp500")
+    df_dow   = emp_rows(DOW30, "dow30")
+    df_nq    = emp_rows(NQ100, "nasdaq100")
+    return {"Resumen Macro": df_macro,
+            "SP500 Empresas": df_sp,
+            "Dow30 Empresas": df_dow,
+            "Nasdaq100 Empresas": df_nq}
+
 
 @st.cache_data(ttl=300)
 def cargar_hoja(ruta, hoja):
-    if not os.path.exists(ruta):
-        return pd.DataFrame()
-    try:
-        return pd.read_excel(ruta, sheet_name=hoja)
-    except Exception:
-        return pd.DataFrame()
+    # Intentar desde Excel local
+    if os.path.exists(ruta):
+        try:
+            df = pd.read_excel(ruta, sheet_name=hoja)
+            if not df.empty:
+                return df
+        except Exception:
+            pass
+    # Fallback: generar en memoria desde yfinance
+    datos = _generar_trading_data()
+    return datos.get(hoja, pd.DataFrame())
 
 
 @st.cache_data(ttl=60)
