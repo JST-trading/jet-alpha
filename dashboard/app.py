@@ -595,9 +595,9 @@ def cargar_csv(ruta, skiprows=None):
     return pd.DataFrame()
 
 
-@st.cache_data(ttl=1800, show_spinner="Cargando datos de mercado...")
+@st.cache_data(ttl=1800, show_spinner="Actualizando datos de mercado...")
 def _generar_trading_data():
-    """Genera datos de mercado en memoria usando yfinance con descarga batch."""
+    """Genera datos de mercado en memoria usando yfinance."""
     import yfinance as yf
 
     MACRO_ITEMS = [
@@ -624,8 +624,7 @@ def _generar_trading_data():
              "AMD","ADBE","QCOM","PEP","CSCO","INTC","INTU","CMCSA","TMUS","AMGN",
              "ISRG","AMAT","MU","LRCX","PANW","ADI","MELI","REGN","VRTX","CDNS"]
 
-    def _close_stats(close_series):
-        """Dado un pd.Series de closes, devuelve (p, p1, p1m, p1a) o None."""
+    def _stats(close_series):
         s = pd.to_numeric(close_series, errors="coerce").dropna()
         if len(s) < 2:
             return None
@@ -635,93 +634,67 @@ def _generar_trading_data():
         p1a = float(s.iloc[-252]) if len(s) >= 252 else float(s.iloc[0])
         return p, p1, p1m, p1a
 
-    def _extract_close(raw, tkr):
-        """Extrae la serie Close de un DataFrame multi-ticker o single-ticker."""
-        if raw is None or raw.empty:
-            return pd.Series(dtype=float)
-        cols = raw.columns
-        if isinstance(cols, pd.MultiIndex):
-            # Intenta (ticker, metric) — resultado de group_by="ticker"
-            lvl0 = cols.get_level_values(0)
-            lvl1 = cols.get_level_values(1)
-            if tkr in lvl0:
-                sub = raw[tkr]
-                if "Close" in sub.columns:
-                    return sub["Close"]
-            # Intenta (metric, ticker) — resultado sin group_by
-            if tkr in lvl1:
-                if "Close" in lvl0:
-                    return raw["Close"][tkr]
-        else:
-            if "Close" in cols:
-                return raw["Close"]
-        return pd.Series(dtype=float)
-
-    # ── Descarga MACRO en un solo batch ─────────────────────────
-    macro_tickers = [t for t, _, _ in MACRO_ITEMS]
-    try:
-        raw_macro = yf.download(macro_tickers, period="1y", auto_adjust=False,
-                                progress=False, group_by="ticker", threads=True)
-    except Exception:
-        raw_macro = None
-
-    macro_rows = []
-    for tkr, nom, cat in MACRO_ITEMS:
+    # ── MACRO: descarga individual por ticker (más confiable para índices/FX/futures) ──
+    def get_row(tkr, nom, cat):
         try:
-            close = _extract_close(raw_macro, tkr)
-            if close.empty:
-                # Fallback individual si no salió en el batch
-                try:
-                    df_ind = yf.download(tkr, period="1y", auto_adjust=False,
-                                         progress=False, threads=False)
-                    if not df_ind.empty:
-                        if isinstance(df_ind.columns, pd.MultiIndex):
-                            df_ind.columns = df_ind.columns.get_level_values(0)
-                        close = pd.to_numeric(df_ind.get("Close", pd.Series()), errors="coerce")
-                except Exception:
-                    continue
-            stats = _close_stats(close)
-            if stats is None:
-                continue
-            p, p1, p1m, p1a = stats
-            macro_rows.append({
+            df = yf.download(tkr, period="1y", auto_adjust=False,
+                             progress=False, threads=False)
+            if df.empty:
+                return None
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            close = df["Close"].dropna()
+            st_ = _stats(close)
+            if st_ is None:
+                return None
+            p, p1, p1m, p1a = st_
+            return {
                 "Activo": nom, "Ticker": tkr, "Categoría": cat,
                 "Último Valor": round(p, 4),
                 "Cambio Día %": round((p/p1-1)*100, 2),
                 "Cambio 1M %":  round((p/p1m-1)*100, 2),
                 "Cambio 1A %":  round((p/p1a-1)*100, 2),
-            })
+            }
         except Exception:
-            continue
+            return None
 
+    macro_rows = [r for tkr, nom, cat in MACRO_ITEMS for r in [get_row(tkr, nom, cat)] if r]
     df_macro = pd.DataFrame(macro_rows) if macro_rows else pd.DataFrame(
         columns=["Activo","Ticker","Categoría","Último Valor","Cambio Día %","Cambio 1M %","Cambio 1A %"])
 
-    # ── Descarga empresas en batch ────────────────────────────────
+    # ── EMPRESAS: batch download (tickers estándar US, funciona bien en batch) ──
     def emp_batch(tickers):
+        rows = []
         try:
             raw = yf.download(tickers, period="1y", auto_adjust=False,
-                              progress=False, group_by="ticker", threads=True)
+                              progress=False, group_by="ticker", threads=False)
+            if raw.empty:
+                raise ValueError("empty")
+            is_multi = isinstance(raw.columns, pd.MultiIndex)
+            for t in tickers:
+                try:
+                    if is_multi:
+                        # group_by="ticker" → nivel 0 = ticker
+                        if t in raw.columns.get_level_values(0):
+                            close = raw[t]["Close"]
+                        else:
+                            continue
+                    else:
+                        close = raw["Close"]
+                    st_ = _stats(close)
+                    if st_ is None:
+                        continue
+                    p, p1, p1m, p1a = st_
+                    rows.append({
+                        "Ticker": t, "Precio": round(p, 2),
+                        "Cambio Día %": round((p/p1-1)*100, 2),
+                        "Cambio 1M %":  round((p/p1m-1)*100, 2),
+                        "Cambio 1A %":  round((p/p1a-1)*100, 2),
+                    })
+                except Exception:
+                    continue
         except Exception:
-            raw = None
-        rows = []
-        for t in tickers:
-            try:
-                close = _extract_close(raw, t)
-                if close.empty:
-                    continue
-                stats = _close_stats(close)
-                if stats is None:
-                    continue
-                p, p1, p1m, p1a = stats
-                rows.append({
-                    "Ticker": t, "Precio": round(p, 2),
-                    "Cambio Día %": round((p/p1-1)*100, 2),
-                    "Cambio 1M %":  round((p/p1m-1)*100, 2),
-                    "Cambio 1A %":  round((p/p1a-1)*100, 2),
-                })
-            except Exception:
-                continue
+            pass
         return pd.DataFrame(rows) if rows else pd.DataFrame(
             columns=["Ticker","Precio","Cambio Día %","Cambio 1M %","Cambio 1A %"])
 
