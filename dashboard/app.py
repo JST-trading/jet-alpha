@@ -595,7 +595,7 @@ def cargar_csv(ruta, skiprows=None):
     return pd.DataFrame()
 
 
-@st.cache_data(ttl=1800, show_spinner=False)
+@st.cache_data(ttl=1800, show_spinner="Cargando datos de mercado...")
 def _generar_trading_data():
     """Genera datos de mercado en memoria usando yfinance con descarga batch."""
     import yfinance as yf
@@ -626,7 +626,7 @@ def _generar_trading_data():
 
     def _close_stats(close_series):
         """Dado un pd.Series de closes, devuelve (p, p1, p1m, p1a) o None."""
-        s = close_series.dropna()
+        s = pd.to_numeric(close_series, errors="coerce").dropna()
         if len(s) < 2:
             return None
         p   = float(s.iloc[-1])
@@ -635,24 +635,52 @@ def _generar_trading_data():
         p1a = float(s.iloc[-252]) if len(s) >= 252 else float(s.iloc[0])
         return p, p1, p1m, p1a
 
+    def _extract_close(raw, tkr):
+        """Extrae la serie Close de un DataFrame multi-ticker o single-ticker."""
+        if raw is None or raw.empty:
+            return pd.Series(dtype=float)
+        cols = raw.columns
+        if isinstance(cols, pd.MultiIndex):
+            # Intenta (ticker, metric) — resultado de group_by="ticker"
+            lvl0 = cols.get_level_values(0)
+            lvl1 = cols.get_level_values(1)
+            if tkr in lvl0:
+                sub = raw[tkr]
+                if "Close" in sub.columns:
+                    return sub["Close"]
+            # Intenta (metric, ticker) — resultado sin group_by
+            if tkr in lvl1:
+                if "Close" in lvl0:
+                    return raw["Close"][tkr]
+        else:
+            if "Close" in cols:
+                return raw["Close"]
+        return pd.Series(dtype=float)
+
     # ── Descarga MACRO en un solo batch ─────────────────────────
     macro_tickers = [t for t, _, _ in MACRO_ITEMS]
     try:
         raw_macro = yf.download(macro_tickers, period="1y", auto_adjust=False,
-                                progress=False, group_by="ticker")
+                                progress=False, group_by="ticker", threads=True)
     except Exception:
-        raw_macro = pd.DataFrame()
+        raw_macro = None
 
     macro_rows = []
     for tkr, nom, cat in MACRO_ITEMS:
         try:
-            if isinstance(raw_macro.columns, pd.MultiIndex):
-                df_t = raw_macro[tkr] if tkr in raw_macro.columns.get_level_values(0) else pd.DataFrame()
-            else:
-                df_t = raw_macro
-            if df_t.empty:
-                continue
-            stats = _close_stats(df_t["Close"])
+            close = _extract_close(raw_macro, tkr)
+            if close.empty:
+                # Fallback individual si no salió en el batch
+                try:
+                    df_ind = yf.download(tkr, period="1y", auto_adjust=False,
+                                         progress=False, threads=False)
+                    if not df_ind.empty:
+                        if isinstance(df_ind.columns, pd.MultiIndex):
+                            df_ind.columns = df_ind.columns.get_level_values(0)
+                        close = pd.to_numeric(df_ind.get("Close", pd.Series()), errors="coerce")
+                except Exception:
+                    continue
+            stats = _close_stats(close)
             if stats is None:
                 continue
             p, p1, p1m, p1a = stats
@@ -673,19 +701,16 @@ def _generar_trading_data():
     def emp_batch(tickers):
         try:
             raw = yf.download(tickers, period="1y", auto_adjust=False,
-                              progress=False, group_by="ticker")
+                              progress=False, group_by="ticker", threads=True)
         except Exception:
-            return pd.DataFrame(columns=["Ticker","Precio","Cambio Día %","Cambio 1M %","Cambio 1A %"])
+            raw = None
         rows = []
         for t in tickers:
             try:
-                if isinstance(raw.columns, pd.MultiIndex):
-                    df_t = raw[t] if t in raw.columns.get_level_values(0) else pd.DataFrame()
-                else:
-                    df_t = raw
-                if df_t.empty or "Close" not in df_t.columns:
+                close = _extract_close(raw, t)
+                if close.empty:
                     continue
-                stats = _close_stats(df_t["Close"])
+                stats = _close_stats(close)
                 if stats is None:
                     continue
                 p, p1, p1m, p1a = stats
@@ -1776,8 +1801,14 @@ if "Dashboard" in pagina:
                     </style>""", unsafe_allow_html=True)
 
         periodo_dash = st.session_state.get("periodo_dash", "3M")
+        # Usar datos ya descargados del batch macro (siempre disponibles en cloud)
+        _datos_batch = _generar_trading_data()
+        _sp_from_macro = None
         ruta_sp = os.path.join(DATA_DIR, "indices", "SP500.csv")
         df_sp = cargar_csv(ruta_sp, skiprows=[1, 2])
+        # Si no hay CSV local, usar yfinance directamente
+        if df_sp.empty:
+            df_sp = _yf_fallback("^GSPC")
 
         if not df_sp.empty and "Close" in df_sp.columns:
             corte_dash = periodos_map_dash.get(periodo_dash, -66)
@@ -1871,9 +1902,10 @@ if "Dashboard" in pagina:
             top5 = df_emp_s.nlargest(5, "Cambio Día %")
             filas_top = []
             for _, r in top5.iterrows():
+                precio = float(r.get("Precio", r.get("Último Precio", 0)) or 0)
                 filas_top.append((
                     str(r.get("Ticker", ""))[:8],
-                    f"${float(r.get('Último Precio', 0) or 0):,.2f}",
+                    f"${precio:,.2f}",
                     float(r.get("Cambio Día %", 0) or 0),
                 ))
             if filas_top:
@@ -1883,9 +1915,10 @@ if "Dashboard" in pagina:
             bot5 = df_emp_s.nsmallest(5, "Cambio Día %")
             filas_bot = []
             for _, r in bot5.iterrows():
+                precio = float(r.get("Precio", r.get("Último Precio", 0)) or 0)
                 filas_bot.append((
                     str(r.get("Ticker", ""))[:8],
-                    f"${float(r.get('Último Precio', 0) or 0):,.2f}",
+                    f"${precio:,.2f}",
                     float(r.get("Cambio Día %", 0) or 0),
                 ))
             if filas_bot:
@@ -1973,10 +2006,14 @@ if "Dashboard" in pagina:
                         else:
                             earn_date = "N/D"
                         fi = t_obj.fast_info
+                        try:
+                            precio_fi = f"${float(fi.last_price):,.2f}"
+                        except Exception:
+                            precio_fi = "-"
                         earn_rows.append({
                             "Ticker": tk,
                             "Próx. Earnings": earn_date,
-                            "Precio": f"${fi.get('last_price', 0):,.2f}" if hasattr(fi, "get") else "-",
+                            "Precio": precio_fi,
                         })
                     except Exception:
                         earn_rows.append({"Ticker": tk, "Próx. Earnings": "N/D", "Precio": "-"})
