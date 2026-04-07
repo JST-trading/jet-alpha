@@ -2047,7 +2047,7 @@ if "Dashboard" in pagina:
         # ── Gráfico Variación por categoría ───────────────────────
         if not df_macro.empty:
             st.markdown('<div style="font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;color:#a07820;font-weight:700;padding:5px 0 8px;border-bottom:1.5px solid rgba(197,168,96,0.3);margin-bottom:10px;margin-top:14px;">VARIACIÓN POR CATEGORÍA</div>', unsafe_allow_html=True)
-            cat_sel = st.selectbox("", ["COMMODITIES", "ÍNDICES", "MONEDAS", "TASAS UST"], key="cat_bar_dash", label_visibility="collapsed")
+            cat_sel = st.selectbox("Categoría", ["COMMODITIES", "ÍNDICES", "MONEDAS", "TASAS UST"], key="cat_bar_dash", label_visibility="collapsed")
             fig_bar = grafico_barras(df_macro, cat_sel)
             if fig_bar.data:
                 st.plotly_chart(fig_bar, use_container_width=True)
@@ -2778,7 +2778,7 @@ elif "Fundamental" in pagina:
     """, unsafe_allow_html=True)
 
     # ── Selector principal ──────────────────────────────────────
-    modo_fund = st.radio("", ["◆ Mercado / Heatmap", "◉ Ratios por Empresa", "◎ EERR Detallado"],
+    modo_fund = st.radio("Vista", ["◆ Mercado / Heatmap", "◉ Ratios por Empresa", "◎ EERR Detallado"],
                          horizontal=True, key="modo_fund", label_visibility="collapsed")
 
     if modo_fund == "◆ Mercado / Heatmap":
