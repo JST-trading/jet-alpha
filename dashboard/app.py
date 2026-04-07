@@ -636,36 +636,44 @@ def _generar_trading_data():
 
     def get_row(tkr, nom, cat):
         try:
-            h = yf.Ticker(tkr).history(period="5d")
-            if h.empty: return None
-            p   = float(h["Close"].iloc[-1])
-            p1  = float(h["Close"].iloc[-2]) if len(h)>=2 else p
-            h1m = yf.Ticker(tkr).history(period="1mo")
-            h1a = yf.Ticker(tkr).history(period="1y")
-            p1m = float(h1m["Close"].iloc[0]) if not h1m.empty else p
-            p1a = float(h1a["Close"].iloc[0]) if not h1a.empty else p
-            return {"Activo":nom,"Ticker":tkr,"Categoría":cat,
-                    "Precio":round(p,2),
-                    "Cambio Día %":round((p/p1-1)*100,2),
-                    "Cambio 1M %":round((p/p1m-1)*100,2),
-                    "Cambio 1A %":round((p/p1a-1)*100,2)}
+            df = yf.download(tkr, period="1y", auto_adjust=False,
+                             progress=False, threads=False)
+            if df.empty: return None
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            close = df["Close"].dropna()
+            if len(close) < 2: return None
+            p   = float(close.iloc[-1])
+            p1  = float(close.iloc[-2])
+            p1m = float(close.iloc[-22])  if len(close)>=22  else float(close.iloc[0])
+            p1a = float(close.iloc[-252]) if len(close)>=252 else float(close.iloc[0])
+            return {
+                "Activo": nom, "Ticker": tkr, "Categoría": cat,
+                "Último Valor":  round(p, 4),
+                "Cambio Día %":  round((p/p1-1)*100, 2),
+                "Cambio 1M %":   round((p/p1m-1)*100, 2),
+                "Cambio 1A %":   round((p/p1a-1)*100, 2),
+            }
         except Exception:
             return None
 
     def emp_rows(tickers, folder):
         rows = []
         for t in tickers:
-            ruta = os.path.join(DATA_DIR,"raw",folder,f"{t}.csv")
-            df = cargar_csv(ruta, skiprows=[1,2])
+            ruta = os.path.join(DATA_DIR, "raw", folder, f"{t}.csv")
+            df   = cargar_csv(ruta, skiprows=[1,2])
             if df.empty or "Close" not in df.columns or len(df)<2: continue
-            p   = float(df["Close"].iloc[-1])
-            p1  = float(df["Close"].iloc[-2])
-            p1m = float(df["Close"].iloc[-22]) if len(df)>=22 else p
-            p1a = float(df["Close"].iloc[-252]) if len(df)>=252 else p
-            rows.append({"Ticker":t,"Precio":round(p,2),
-                         "Cambio Día %":round((p/p1-1)*100,2),
-                         "Cambio 1M %":round((p/p1m-1)*100,2),
-                         "Cambio 1A %":round((p/p1a-1)*100,2)})
+            close = df["Close"].dropna()
+            p   = float(close.iloc[-1])
+            p1  = float(close.iloc[-2])
+            p1m = float(close.iloc[-22])  if len(close)>=22  else float(close.iloc[0])
+            p1a = float(close.iloc[-252]) if len(close)>=252 else float(close.iloc[0])
+            rows.append({
+                "Ticker": t, "Precio": round(p, 2),
+                "Cambio Día %": round((p/p1-1)*100, 2),
+                "Cambio 1M %":  round((p/p1m-1)*100, 2),
+                "Cambio 1A %":  round((p/p1a-1)*100, 2),
+            })
         return pd.DataFrame(rows) if rows else pd.DataFrame(
             columns=["Ticker","Precio","Cambio Día %","Cambio 1M %","Cambio 1A %"])
 
@@ -682,15 +690,19 @@ def _generar_trading_data():
 
 @st.cache_data(ttl=300)
 def cargar_hoja(ruta, hoja):
-    # Intentar desde Excel local
+    # Intentar desde Excel local — verificar que tenga columnas correctas
     if os.path.exists(ruta):
         try:
             df = pd.read_excel(ruta, sheet_name=hoja)
             if not df.empty:
-                return df
+                # Verificar que Resumen Macro tenga "Último Valor" (no "Precio")
+                if hoja == "Resumen Macro" and "Último Valor" not in df.columns:
+                    pass  # Excel viejo, usar fallback
+                else:
+                    return df
         except Exception:
             pass
-    # Fallback: generar en memoria desde yfinance
+    # Fallback siempre activo en la nube
     datos = _generar_trading_data()
     return datos.get(hoja, pd.DataFrame())
 
