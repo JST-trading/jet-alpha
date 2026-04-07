@@ -16,11 +16,15 @@ from datetime import datetime
 
 # ── Auto-setup en Streamlit Community Cloud ────────────────────
 _BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_IS_CLOUD = not os.path.exists(os.path.join(_BASE, "data", "indices", "SP500.csv"))
-if _IS_CLOUD:
+_SP500_CSV  = os.path.join(_BASE, "data", "indices", "SP500.csv")
+_XLSX_PATH  = os.path.join(_BASE, "data", "TRADING_DATA.xlsx")
+_NEED_SETUP = not os.path.exists(_SP500_CSV) or not os.path.exists(_XLSX_PATH)
+if _NEED_SETUP:
     try:
-        import sys; sys.path.insert(0, _BASE)
-        import setup_cloud  # noqa: F401
+        import sys, importlib
+        sys.path.insert(0, _BASE)
+        import setup_cloud
+        importlib.reload(setup_cloud)
     except Exception:
         pass
 
