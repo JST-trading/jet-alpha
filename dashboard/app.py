@@ -3315,10 +3315,225 @@ elif "Fundamental" in pagina:
     """, unsafe_allow_html=True)
 
     # ── Selector principal ──────────────────────────────────────
-    modo_fund = st.radio("Vista", ["◆ Mercado / Heatmap", "◉ Ratios por Empresa", "◎ EERR Detallado"],
+    modo_fund = st.radio("Vista", ["◈ Tabla de Múltiplos", "◆ Mercado / Heatmap", "◉ Ratios por Empresa", "◎ EERR Detallado"],
                          horizontal=True, key="modo_fund", label_visibility="collapsed")
 
-    if modo_fund == "◆ Mercado / Heatmap":
+    if modo_fund == "◈ Tabla de Múltiplos":
+        st.markdown('<div class="section-header">TABLA DE MÚLTIPLOS — Selecciona empresas y compara Market Cap · P/E · P/B · EV/EBITDA</div>', unsafe_allow_html=True)
+
+        # ── Lista predefinida + agregar tickers custom ────────────
+        _DEFAULT_TICKERS = [
+            "AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA","JPM","V","MA",
+            "UNH","XOM","JNJ","PG","HD","AVGO","CVX","MRK","LLY","ABBV",
+            "COST","KO","PEP","ADBE","WMT","CRM","MCD","CSCO","GS","BAC",
+            "NFLX","AMD","INTC","QCOM","IBM","HON","CAT","BA","GE","TXN",
+            "AMGN","ISRG","DE","LOW","NOW","BKNG","ADP","PYPL","TGT","SQ",
+        ]
+
+        _fm1, _fm2, _fm3 = st.columns([3, 1, 1])
+        with _fm1:
+            _add_tkr = st.text_input("Agregar ticker", "", placeholder="ej: SHOP, TSM, ASML", key="mult_add").upper().strip()
+        with _fm2:
+            _idx_filter = st.selectbox("Índice base", ["SP500","Nasdaq100","Dow30","Custom"], key="mult_idx")
+        with _fm3:
+            _sort_by = st.selectbox("Ordenar por", ["Market Cap","P/E","P/B","EV/EBITDA","Empresa"], key="mult_sort")
+
+        # Inicializar lista en session_state
+        if "mult_tickers" not in st.session_state:
+            st.session_state["mult_tickers"] = list(_DEFAULT_TICKERS[:20])
+        if "mult_seleccionados" not in st.session_state:
+            st.session_state["mult_seleccionados"] = set()
+
+        # Agregar ticker custom
+        if _add_tkr and _add_tkr not in st.session_state["mult_tickers"]:
+            st.session_state["mult_tickers"].insert(0, _add_tkr)
+            st.session_state["mult_seleccionados"].add(_add_tkr)
+
+        # Cambiar índice base
+        _idx_base_map = {
+            "SP500":    ["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA","JPM","V","MA","UNH","XOM","JNJ","PG","HD","AVGO","CVX","MRK","LLY","ABBV","COST","KO","PEP","ADBE","WMT","CRM","MCD","CSCO","GS","BAC","NFLX","AMD","INTC","QCOM","IBM","HON","CAT","BA","GE","TXN","AMGN","ISRG","DE","LOW","NOW","BKNG","ADP","PYPL","TGT","SQ"],
+            "Nasdaq100":["AAPL","MSFT","NVDA","AMZN","META","GOOGL","TSLA","AVGO","COST","NFLX","AMD","ADBE","QCOM","PEP","CSCO","INTC","INTU","CMCSA","TMUS","AMGN","ISRG","AMAT","MU","LRCX","PANW","ADI","MELI","REGN","VRTX","CDNS"],
+            "Dow30":    ["AAPL","AMGN","AXP","BA","CAT","CRM","CSCO","CVX","DIS","DOW","GS","HD","HON","IBM","INTC","JNJ","JPM","KO","MCD","MMM","MRK","MSFT","NKE","PG","TRV","UNH","V","VZ","WBA","WMT"],
+        }
+        if _idx_filter != "Custom":
+            st.session_state["mult_tickers"] = _idx_base_map.get(_idx_filter, _DEFAULT_TICKERS[:20])
+
+        # Checkbox de selección
+        st.markdown("<div style='font-size:.65rem;color:#a07820;letter-spacing:2px;margin:8px 0 4px;'>SELECCIONA LAS EMPRESAS A COMPARAR:</div>", unsafe_allow_html=True)
+        _chk_cols = st.columns(10)
+        for _ci, _tk in enumerate(st.session_state["mult_tickers"]):
+            with _chk_cols[_ci % 10]:
+                _checked = st.checkbox(_tk, value=(_tk in st.session_state["mult_seleccionados"]), key=f"mchk_{_tk}")
+                if _checked:
+                    st.session_state["mult_seleccionados"].add(_tk)
+                else:
+                    st.session_state["mult_seleccionados"].discard(_tk)
+
+        _selected = sorted(st.session_state["mult_seleccionados"])
+
+        _mc1, _mc2 = st.columns([1, 1])
+        with _mc1:
+            if st.button("✓ Seleccionar todas", key="mult_all"):
+                st.session_state["mult_seleccionados"] = set(st.session_state["mult_tickers"])
+                st.rerun()
+        with _mc2:
+            if st.button("✕ Limpiar selección", key="mult_none"):
+                st.session_state["mult_seleccionados"] = set()
+                st.rerun()
+
+        if not _selected:
+            st.info("Selecciona al menos una empresa para ver los múltiplos.")
+        else:
+            st.markdown(f"<div style='font-size:.65rem;color:#a07820;letter-spacing:2px;margin:10px 0 6px;'>{len(_selected)} EMPRESAS SELECCIONADAS — CARGANDO MÚLTIPLOS...</div>", unsafe_allow_html=True)
+
+            @st.cache_data(ttl=3600, show_spinner=False)
+            def _fetch_multiplos_batch(tickers_tuple):
+                import yfinance as yf
+                rows = []
+                # Batch download para precio/cambio
+                try:
+                    raw = yf.download(list(tickers_tuple), period="2d", auto_adjust=False,
+                                      progress=False, group_by="ticker", threads=False)
+                    is_multi = isinstance(raw.columns, pd.MultiIndex)
+                except Exception:
+                    raw = None; is_multi = False
+
+                for t in tickers_tuple:
+                    try:
+                        info = yf.Ticker(t).info or {}
+                    except Exception:
+                        info = {}
+
+                    def _v(key, fmt=None):
+                        v = info.get(key)
+                        if v is None or v == "N/A": return "—"
+                        try:
+                            f = float(v)
+                            if fmt == "bn":
+                                if f >= 1e12: return f"${f/1e12:.2f}T"
+                                if f >= 1e9:  return f"${f/1e9:.1f}B"
+                                return f"${f/1e6:.0f}M"
+                            if fmt == "x":   return f"{f:.1f}x"
+                            if fmt == "pct": return f"{f*100:.1f}%"
+                            return f"{f:.2f}"
+                        except Exception:
+                            return str(v)
+
+                    # Precio actual y cambio día
+                    precio_str = "—"; cambio_str = "—"; cambio_val = None
+                    try:
+                        if raw is not None and is_multi and t in raw.columns.get_level_values(0):
+                            close = pd.to_numeric(raw[t]["Close"], errors="coerce").dropna()
+                        elif raw is not None and not is_multi and "Close" in raw.columns:
+                            close = pd.to_numeric(raw["Close"], errors="coerce").dropna()
+                        else:
+                            close = pd.Series(dtype=float)
+                        if len(close) >= 2:
+                            p, p1 = float(close.iloc[-1]), float(close.iloc[-2])
+                            cambio_val = round((p/p1-1)*100, 2)
+                            precio_str = f"${p:,.2f}"
+                            cambio_str = f"{'+' if cambio_val>=0 else ''}{cambio_val:.2f}%"
+                    except Exception:
+                        pass
+
+                    rows.append({
+                        "Ticker":      t,
+                        "Empresa":     (info.get("shortName") or t)[:22],
+                        "Sector":      (info.get("sector") or "—")[:18],
+                        "Precio":      precio_str,
+                        "Cambio Día":  cambio_str,
+                        "_cambio_val": cambio_val,
+                        "Market Cap":  _v("marketCap", "bn"),
+                        "P/E":         _v("trailingPE", "x"),
+                        "P/E Fwd":     _v("forwardPE",  "x"),
+                        "P/B":         _v("priceToBook","x"),
+                        "EV/EBITDA":   _v("enterpriseToEbitda","x"),
+                        "EV/Revenue":  _v("enterpriseToRevenue","x"),
+                        "Margen Neto": _v("profitMargins","pct"),
+                        "ROE":         _v("returnOnEquity","pct"),
+                        "Beta":        _v("beta"),
+                        "Div. Yield":  _v("dividendYield","pct"),
+                    })
+                return rows
+
+            with st.spinner(f"Descargando datos de {len(_selected)} empresas..."):
+                _mult_data = _fetch_multiplos_batch(tuple(_selected))
+
+            if _mult_data:
+                df_mult = pd.DataFrame(_mult_data)
+
+                # Ordenar
+                _sort_col = {"Market Cap":"Market Cap","P/E":"P/E","P/B":"P/B",
+                             "EV/EBITDA":"EV/EBITDA","Empresa":"Empresa"}.get(_sort_by,"Market Cap")
+                try:
+                    df_mult_sorted = df_mult.drop(columns=["_cambio_val"]).copy()
+                except Exception:
+                    df_mult_sorted = df_mult.copy()
+
+                # Render tabla HTML con colores
+                _cols_show = ["Ticker","Empresa","Sector","Precio","Cambio Día","Market Cap","P/E","P/E Fwd","P/B","EV/EBITDA","EV/Revenue","Margen Neto","ROE","Beta","Div. Yield"]
+                _header = "".join(f'<th style="padding:6px 10px;white-space:nowrap;font-size:.65rem;letter-spacing:2px;color:#a07820;border-bottom:2px solid rgba(197,168,96,0.4);text-align:right;">{c}</th>' for c in _cols_show)
+                _header = f'<th style="padding:6px 10px;font-size:.65rem;letter-spacing:2px;color:#a07820;border-bottom:2px solid rgba(197,168,96,0.4);">#</th>' + _header
+
+                _rows_html = ""
+                for i, row in enumerate(df_mult):
+                    bg = "#ffffff" if i % 2 == 0 else "#fdf9f2"
+                    _cv = row.get("_cambio_val") if isinstance(row, dict) else None
+
+                _rows_html = ""
+                for i, row_d in enumerate(_mult_data):
+                    bg = "#ffffff" if i % 2 == 0 else "#fdf9f2"
+                    cv = row_d.get("_cambio_val")
+                    chg_color = "#0066cc" if cv and cv >= 0 else ("#cc3300" if cv and cv < 0 else "#0a0a0a")
+
+                    def _cell(val, right=True, color="#0a0a0a", bold=False):
+                        align = "right" if right else "left"
+                        fw = "700" if bold else "500"
+                        return f'<td style="padding:5px 10px;font-size:.75rem;color:{color};font-weight:{fw};text-align:{align};white-space:nowrap;border-bottom:1px solid rgba(197,168,96,0.08);background:{bg};">{val}</td>'
+
+                    _rows_html += (
+                        f'<tr>'
+                        f'<td style="padding:5px 10px;font-size:.65rem;color:#a07820;background:{bg};border-bottom:1px solid rgba(197,168,96,0.08);">{i+1}</td>'
+                        + _cell(f'<b style="font-family:monospace">{row_d["Ticker"]}</b>', right=False, color="#0a0a0a", bold=True)
+                        + _cell(row_d["Empresa"], right=False, color="#444")
+                        + _cell(row_d["Sector"], right=False, color="#888")
+                        + _cell(row_d["Precio"], color="#0a0a0a", bold=True)
+                        + _cell(row_d["Cambio Día"], color=chg_color, bold=True)
+                        + _cell(row_d["Market Cap"], bold=True)
+                        + _cell(row_d["P/E"])
+                        + _cell(row_d["P/E Fwd"])
+                        + _cell(row_d["P/B"])
+                        + _cell(row_d["EV/EBITDA"])
+                        + _cell(row_d["EV/Revenue"])
+                        + _cell(row_d["Margen Neto"])
+                        + _cell(row_d["ROE"])
+                        + _cell(row_d["Beta"])
+                        + _cell(row_d["Div. Yield"])
+                        + f'</tr>'
+                    )
+
+                st.markdown(f"""
+                <div style="overflow-x:auto;border:1.5px solid rgba(197,168,96,0.35);border-radius:6px;margin-top:10px;">
+                <table style="width:100%;border-collapse:collapse;font-family:Inter,sans-serif;">
+                  <thead style="background:linear-gradient(135deg,#fdf9f2,#f5ede0);">
+                    <tr>{_header}</tr>
+                  </thead>
+                  <tbody>{_rows_html}</tbody>
+                </table>
+                </div>
+                """, unsafe_allow_html=True)
+
+                # Botón exportar CSV
+                _csv_exp = df_mult.drop(columns=["_cambio_val"], errors="ignore").to_csv(index=False)
+                st.download_button(
+                    "⬇ Exportar CSV",
+                    data=_csv_exp,
+                    file_name="multiplos_jst_alpha.csv",
+                    mime="text/csv",
+                    key="mult_export",
+                )
+
+    elif modo_fund == "◆ Mercado / Heatmap":
         tab_sp, tab_nq, tab_dw = st.tabs([
             "◆  S&P 500",
             "◆  Nasdaq 100",
